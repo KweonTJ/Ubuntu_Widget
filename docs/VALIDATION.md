@@ -39,3 +39,10 @@ clicks, ignoring drags on controls, scrolling, right-click handling, and restori
 saved geometry after reopening. Run `make test-native` after building the engine;
 install `xvfb` and `xauth` first. The ordinary test suite skips this optional GUI
 test unless `EWW_NATIVE_TEST_BINARY` is provided.
+
+The pointer test also passed at 2x scale on Xvfb with a 2560 × 2048 virtual
+screen (`EWW_NATIVE_TEST_SCALE=2`). On the GNOME/Xorg desktop with glass enabled,
+body dragging and both edge controls were exercised on an installed card and
+its layout was restored. The glass frame inset now matches the 8 px canvas
+padding so Mutter does not discard clicks on the card edges; resize targets
+are 16 logical pixels wide.

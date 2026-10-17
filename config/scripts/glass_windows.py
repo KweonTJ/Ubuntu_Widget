@@ -44,7 +44,9 @@ def main():
     scale=max(1,Gdk.get_default_root_window().get_scale_factor())
     # Keep blur inside the rounded panel, excluding transparent outer margins.
     # GTK frame-extents tell Mutter which part of the client is decoration.
-    inset=15*scale;original_extents={};pending={};last=None
+    # Match .movable-canvas padding. A larger decoration extent makes Mutter
+    # discard clicks on the visible card edges and their resize controls.
+    inset=8*scale;original_extents={};pending={};last=None
     while True:
         try:
             value=glass.settings();items={w['id']:w for w in store.catalogue()}

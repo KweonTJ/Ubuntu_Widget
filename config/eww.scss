@@ -111,7 +111,7 @@ scrollbar { background: transparent; }
 scrollbar slider { min-width: 3px; border-radius: 3px; background: rgba(145, 140, 163, 0.35); }
 .corner-grip, .corner-grip:hover, .corner-grip:active, .width-grip, .width-grip:hover, .resize-grip, .resize-grip:hover { background: transparent; }
 .corner-grip { min-width: 32px; min-height: 16px; }
-.width-grip { min-width: 8px; min-height: 0; margin: 24px 3px 24px 0; }
+.width-grip { min-width: 16px; min-height: 0; margin: 24px 0; }
 .resize-grip { min-width: 18px; min-height: 18px; padding: 0; margin: 0 6px 6px 0; }
 
 /* macOS-style device battery rings. */

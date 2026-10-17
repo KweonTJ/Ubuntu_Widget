@@ -137,7 +137,7 @@
       (eventbox :resize-window true :resize-axis "horizontal" :resize-edge "left" :resize-grid 16
         :resize-min-width 192 :resize-min-height 96 :cursor "ew-resize"
         :halign "start" :valign "fill" :tooltip "드래그해서 왼쪽 가로폭 조절"
-        (box :class "width-grip" :style "margin: 24px 0 24px 3px;" :vexpand true))
+        (box :class "width-grip" :vexpand true))
       (eventbox :resize-window true :resize-axis "horizontal" :resize-grid 16
         :resize-min-width 192 :resize-min-height 96 :cursor "ew-resize"
         :halign "end" :valign "fill" :tooltip "좌우로 드래그해서 가로폭 조절"

@@ -18,6 +18,7 @@ class NativeControlsTests(unittest.TestCase):
         sys.path.insert(0, str(ROOT / 'config/scripts'))
         import desktop_geometry as x
         binary = str(Path(os.environ['EWW_NATIVE_TEST_BINARY']).resolve())
+        scale = int(os.environ.get('EWW_NATIVE_TEST_SCALE', '1'))
         x.setup('XQueryTree', x.I, [x.P, x.U, C.POINTER(x.U), C.POINTER(x.U), C.POINTER(C.POINTER(x.U)), C.POINTER(C.c_uint)])
 
         def rect():
@@ -26,7 +27,8 @@ class NativeControlsTests(unittest.TestCase):
             try:
                 for window in list(children[:count.value]):
                     if x.prop(window, 'WM_NAME') == 'Eww - uw-control-test':
-                        return x.geometry(window)
+                        result = x.geometry(window)
+                        return {k: v if k == 'id' else v // scale for k, v in result.items()}
             finally:
                 if children:
                     x.X.XFree(children)
@@ -37,7 +39,7 @@ class NativeControlsTests(unittest.TestCase):
             (config / 'runtime').mkdir(mode=0o700)
             env = {**os.environ, 'XDG_CACHE_HOME': str(config / 'cache'),
                    'XDG_RUNTIME_DIR': str(config / 'runtime'), 'NO_AT_BRIDGE': '1',
-                   'GDK_BACKEND': 'x11', 'EWW_WIDGET_CONFIG': temporary, 'EWW_WIDGET_BINARY': binary}
+                   'GDK_BACKEND': 'x11', 'GDK_SCALE': str(scale), 'EWW_WIDGET_CONFIG': temporary, 'EWW_WIDGET_BINARY': binary}
             (config / 'eww.yuck').write_text('''
 (defwindow uw-control-test
  :geometry (geometry :x "200px" :y "200px" :width "320px" :height "224px")
@@ -69,8 +71,11 @@ class NativeControlsTests(unittest.TestCase):
                 time.sleep(.3)
                 return rect()
 
+            def drag(start, end):
+                x.drag(tuple(v * scale for v in start), tuple(v * scale for v in end))
+
             def click(px, py, button=1):
-                x.mouse(px, py)
+                x.mouse(px * scale, py * scale)
                 for down in (True, False):
                     x.T.XTestFakeButtonEvent(x.D, button, int(down), 0)
                     x.X.XFlush(x.D)
@@ -91,26 +96,26 @@ class NativeControlsTests(unittest.TestCase):
                 click(before['x'] + 100, before['y'] + 20)
                 self.assertEqual(settle(), before, 'A plain body click must not move the card')
 
-                x.drag((before['x'] + 100, before['y'] + 20), (before['x'] + 164, before['y'] + 68))
+                drag((before['x'] + 100, before['y'] + 20), (before['x'] + 164, before['y'] + 68))
                 moved = settle()
                 self.assertEqual((moved['x'], moved['y']), (before['x'] + 64, before['y'] + 48), 'Drag must start on the label')
-                x.drag((moved['x'] + 100, moved['y'] + 75), (moved['x'] + 132, moved['y'] + 91))
+                drag((moved['x'] + 100, moved['y'] + 75), (moved['x'] + 132, moved['y'] + 91))
                 scrolled = settle()
                 self.assertEqual((scrolled['x'], scrolled['y']), (moved['x'] + 32, moved['y'] + 16), 'Drag must start inside the scroll viewport')
 
                 right = scrolled['x'] + scrolled['width']
-                x.drag((scrolled['x'] + 5, scrolled['y'] + 90), (scrolled['x'] - 59, scrolled['y'] + 90))
+                drag((scrolled['x'] + 5, scrolled['y'] + 90), (scrolled['x'] - 59, scrolled['y'] + 90))
                 left = settle()
                 self.assertEqual(left['width'], scrolled['width'] + 64)
                 self.assertEqual(left['x'] + left['width'], right, 'Left resize must keep the opposite edge fixed')
                 self.assertEqual(left['height'], scrolled['height'])
 
-                x.drag((left['x'] + left['width'] - 5, left['y'] + 90), (left['x'] + left['width'] + 59, left['y'] + 90))
+                drag((left['x'] + left['width'] - 5, left['y'] + 90), (left['x'] + left['width'] + 59, left['y'] + 90))
                 widened = settle()
                 self.assertEqual(widened['width'], left['width'] + 64)
                 self.assertEqual(widened['x'], left['x'])
 
-                x.drag((widened['x'] + 5, widened['y'] + 90), (widened['x'] + 505, widened['y'] + 90))
+                drag((widened['x'] + 5, widened['y'] + 90), (widened['x'] + 505, widened['y'] + 90))
                 small = settle()
                 self.assertEqual(small['width'], 192)
                 self.assertEqual(small['x'] + small['width'], widened['x'] + widened['width'])
@@ -118,7 +123,7 @@ class NativeControlsTests(unittest.TestCase):
                 click(small['x'] + 80, small['y'] + small['height'] - 20)
                 self.assertTrue((config / 'button-click').exists(), 'Buttons must retain their normal click action')
                 self.assertEqual(settle(), small)
-                x.drag((small['x'] + 80, small['y'] + small['height'] - 20), (small['x'] + 112, small['y'] + small['height'] + 30))
+                drag((small['x'] + 80, small['y'] + small['height'] - 20), (small['x'] + 112, small['y'] + small['height'] + 30))
                 self.assertEqual(settle(), small, 'A control must not become a window drag handle')
                 click(small['x'] + 80, small['y'] + 70, button=5)
                 self.assertEqual(settle(), small, 'Scrolling must not move the card')
