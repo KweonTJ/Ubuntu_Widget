@@ -36,3 +36,11 @@ These projects run on the user's system and are not redistributed by this source
 - Website presets link to third-party websites. None of their code, logos, cookies or signed-in content is bundled.
 
 The project's SVG artwork is original project material under the repository's MIT License. No macOS/Apple artwork, wallpaper, system font, icon pack or binary is redistributed. Product names are used to identify integrations and compatibility only.
+
+## KDE Connect (optional, installed separately)
+
+The file-sharing widget calls the installed [KDE Connect](https://kdeconnect.kde.org/) daemon through its session D-Bus API. No KDE Connect source or binary is bundled. KDE Connect is distributed under GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL and other per-file licenses; see the [upstream source and license notices](https://invent.kde.org/network/kdeconnect-kde). Pairing, transport, transfer progress and incoming files remain under KDE Connect control.
+
+## WebKitGTK and external apps
+
+[WebKitGTK](https://webkitgtk.org/) is a system runtime dependency for the local todomate session, under upstream LGPL/BSD and per-file licenses; it is not bundled. [Obsidian](https://obsidian.md/) and [todomate](https://www.todomate.net/) are separately installed/hosted third-party apps, not open-source components redistributed by this project. Only the project's connector code is distributed; authentication and provider terms remain with those apps.

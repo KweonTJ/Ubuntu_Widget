@@ -17,7 +17,7 @@ installer=importlib.util.module_from_spec(spec);spec.loader.exec_module(installe
 class PackageTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
-        self.binary=self.root/'patched-eww';self.binary.write_text('#!/bin/sh\n# eww-native-draggable resize-min-width\necho patched-test-engine\n');self.binary.chmod(0o755)
+        self.binary=self.root/'patched-eww';self.binary.write_text('#!/bin/sh\n# eww-native-draggable resize-min-width EWW_SOCKET_ID\necho patched-test-engine\n');self.binary.chmod(0o755)
     def tearDown(self):self.tmp.cleanup()
     def install(self,home,**kwargs):
         env={'HOME':str(home),'XDG_CONFIG_HOME':str(home/'settings'),'XDG_DATA_HOME':str(home/'data'),'XDG_CACHE_HOME':str(home/'cache')}
@@ -28,7 +28,7 @@ class PackageTests(unittest.TestCase):
             home=self.root/name;config=self.install(home)
             self.assertTrue((config/'scripts/layout.py').exists())
             self.assertEqual(json.loads((config/'positions.json').read_text()),{})
-            desktop=(home/'data/applications/ubuntu-widget.desktop').read_text()
+            desktop=(home/'data/applications/local.ubuntu.WidgetLibrary.desktop').read_text()
             self.assertIn(str(home/'.local/bin/ubuntu-widget'),desktop)
             self.assertFalse((home/'settings/autostart/ubuntu-widget.desktop').exists())
             p=subprocess.run([str(home/'.local/bin/ubuntu-widget'),'--help'],env={**os.environ,'HOME':str(home)},capture_output=True,text=True)

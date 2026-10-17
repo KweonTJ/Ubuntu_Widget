@@ -17,25 +17,25 @@
  (movable-card :theme appearance :name "uw-stocks" (stocks-card)))
 (defwidget weather-card []
  (extra-card :kind "weather" :title "날씨" :tone "blue"
- (label :class "extra-note-title" :text {services.weather.city ?: "지역을 선택하세요"} :xalign 0 :wrap true :wrap-mode "wordchar")
- (box :orientation {sizes.weather.width < 264 ? "v" : "h"} :space-evenly false :spacing 10
-  (label :class "extra-value" :style {sizes.weather.height < 160 ? "font-size: 26px;" : "font-size: 40px;"} :text {services.weather.temperature ?: "—"} :xalign 0)
-  (box :orientation "v" :space-evenly false :valign "center"
-   (label :class "extra-detail" :text {services.weather.condition ?: ""} :xalign 0)
-   (label :class "extra-detail" :text {services.weather.range ?: ""} :xalign 0)))
-(label :class "extra-detail" :text {services.weather.air ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")
- (box :orientation "v" :space-evenly false :spacing 6
-  (for hour in {services.weather.hours ?: "[]"}
-   (box :orientation {sizes.weather.width < 240 ? "v" : "h"} :space-evenly false :spacing 8
-    (label :class "extra-detail" :text {hour.name} :xalign 0)
-    (label :class "extra-detail" :text {hour.detail} :xalign 0 :hexpand true)
-    (label :class "extra-note-title" :text {hour.value} :xalign 0))))
- (box :orientation "v" :space-evenly false :spacing 8
-  (for day in {services.weather.week ?: "[]"}
-   (box :orientation {sizes.weather.width < 288 ? "v" : "h"} :space-evenly false :spacing 4
-    (label :class "extra-detail" :text {day.name + " · " + day.detail} :xalign 0 :hexpand true)
-    (label :class "extra-detail" :text {day.value} :xalign 0))))
-(label :class "extra-detail" :text {services.weather.status ?: "연결을 설정하세요."} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {services.weather.last_update ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-weather" (label :text "지역 설정"))))
+  (label :class "extra-note-title" :style {"font-size: " + sizes.weather.title + "px;"} :text {services.weather.city ?: "지역을 선택하세요"} :xalign 0 :truncate true :limit-width 1)
+  (box :space-evenly false :spacing {sizes.weather.gap}
+   (label :class "extra-value" :style {"font-size: " + sizes.weather.hero + "px;"} :text {services.weather.temperature ?: "—"} :xalign 0 :hexpand true)
+   (box :orientation "v" :space-evenly false :valign "center" :visible {sizes.weather.height >= 150}
+    (label :class "extra-detail" :text {services.weather.condition ?: ""} :xalign 1)
+    (label :class "extra-detail" :text {services.weather.range ?: ""} :xalign 1)))
+  (box :visible {sizes.weather.height >= 210} :space-evenly true :spacing 6
+   (for hour in {services.weather.hours ?: "[]"}
+    (box :visible {(hour.index ?: 0) < sizes.weather.hours} :class "forecast-hour" :orientation "v" :space-evenly false :spacing 5
+     (label :class "extra-detail" :text {hour.name})
+     (label :class "extra-note-title" :text {hour.value}))))
+  (box :visible {sizes.weather.height >= 310} :orientation "v" :space-evenly false :spacing 7
+   (for day in {services.weather.week ?: "[]"}
+    (box :visible {(day.index ?: 0) < sizes.weather.rows} :space-evenly false :spacing 6
+     (label :class "extra-detail" :text {day.name} :xalign 0 :hexpand true)
+     (label :class "extra-detail" :text {day.detail} :xalign 0 :hexpand true)
+     (label :class "extra-detail" :text {day.value} :xalign 1))))
+  (label :visible {sizes.weather.height >= 360} :class "extra-detail" :text {services.weather.air ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")
+  (button :visible {sizes.weather.height >= 180} :class "extra-button" :onclick "./scripts/manager-launch.py select uw-weather" (label :text "지역 설정"))))
 (defwindow uw-weather
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -60,15 +60,16 @@
  (movable-card :theme appearance :name "uw-home" (home-card)))
 (defwidget screentime-card []
  (extra-card :kind "screentime" :title "스크린 타임" :tone "purple"
-
- (label :class "extra-value" :style {sizes.screentime.width < 264 ? "font-size: 24px;" : "font-size: 32px;"} :text {services.screen.total ?: "0분"} :xalign 0)
-(label :class "extra-detail" :text {services.screen.status ?: "기록 꺼짐"} :xalign 0 :wrap true :wrap-mode "wordchar")
- (box :orientation "v" :space-evenly false :spacing 8
-  (for app in {services.screen.rows ?: "[]"}
-   (box :orientation {sizes.screentime.width < 288 ? "v" : "h"} :space-evenly false :spacing 5
-    (label :class "extra-detail" :text {app.name} :xalign 0 :hexpand true :truncate true :limit-width 1)
-    (label :class "extra-note-title" :text {app.value} :xalign 0))))
-(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-screentime" (label :text "기록 설정"))))
+  (label :class "extra-value" :style {"font-size: " + sizes.screentime.hero + "px;"} :text {services.screen.total ?: "0분"} :xalign 0 :truncate true :limit-width 1)
+  (label :visible {sizes.screentime.height >= 150} :class "extra-detail" :text {services.screen.status ?: "기록 꺼짐"} :xalign 0 :wrap true :wrap-mode "wordchar")
+  (box :visible {sizes.screentime.height >= 210} :orientation "v" :space-evenly false :spacing 8
+   (for app in {services.screen.rows ?: "[]"}
+    (box :class "app-row" :visible {(app.index ?: 0) < sizes.screentime.rows} :orientation "v" :space-evenly false :spacing 5
+     (box :space-evenly false :spacing 8
+      (label :class "extra-detail" :text {app.name} :xalign 0 :hexpand true :truncate true :limit-width 1)
+      (label :class "extra-detail" :text {app.value} :xalign 1))
+     (progress :value {app.percent ?: 0}))))
+  (button :visible {sizes.screentime.height >= 180} :class "extra-button" :onclick "./scripts/manager-launch.py select uw-screentime" (label :text "기록 설정"))))
 (defwindow uw-screentime
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -92,8 +93,8 @@
 (defwidget analog-card []
  (extra-card :kind "analog" :title "아날로그 시계" :tone "neutral"
 
- (image :visible {services.clock != ""} :path {services.clock ?: "assets/blank.svg"} :image-width {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :image-height {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :halign "center")
- (label :class "extra-detail" :text {(services.clock_time ?: "—") + " · 이 PC의 현지 시각"} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (image :visible {services.clock != ""} :path {services.clock ?: "assets/blank.svg"} :image-width {sizes.analog.face} :image-height {sizes.analog.face} :halign "center")
+ (label :class "extra-detail" :visible {sizes.analog.height >= 145} :text {(services.clock_time ?: "—") + " · 이 PC의 현지 시각"} :xalign 0 :wrap true :wrap-mode "wordchar")
 ))
 (defwindow uw-analog
  :monitor '["<primary>", 0]'

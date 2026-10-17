@@ -25,3 +25,5 @@ config/glass-compositor-state.json
 config/connections-auth.lock
 config/widget-state.lock
 config/positions.backup-*.json
+
+config/.web-profile/

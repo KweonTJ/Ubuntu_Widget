@@ -67,7 +67,7 @@ class Tests(unittest.TestCase):
   _,snap,_=l.snapshot(now=dt.datetime(2026,10,17,tzinfo=dt.timezone.utc))
   self.assertEqual([e['title'] for e in snap['agenda']],['Future'])
   with self.assertRaises(ValueError):l.save_config('agenda',{'text':'wrong'})
-  self.assertEqual(len(s.library()),34)
+  self.assertEqual(len(s.library()),35)
   for kind in ('weather','analog','agenda','stocks','screentime','home','podcast'):self.assertIn('uw-'+kind,s.hidden())
  def test_weather_missing_aqi_is_not_zero(self):
   def fetch(url,**kw):

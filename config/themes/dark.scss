@@ -1,64 +1,52 @@
-/* Dark palette. Selected automatically by scripts/theme.py. */
-label { color: #edf0f8; }
-.card {
-  background: rgba(34, 36, 45, 0.96);
-  border-color: rgba(255, 255, 255, 0.13);
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.28);
-}
-.clock-card { background: linear-gradient(135deg, rgba(38, 54, 81, 0.98), rgba(57, 44, 76, 0.97)); }
-.eyebrow { color: #b1c7f1; }
-.clock-time { color: #f0f4ff; }
-.clock-date { color: #d0dcf5; }
-.clock-zone { color: #9eacc7; }
-.calendar-title { color: #ff8c99; }
-.weekdays label { color: #a3a5b5; }
-.day.weekend { color: #b2afc3; }
-.day.outside { color: #686977; }
-.day.today { color: #ffffff; background: #ce5e75; }
-.card-heading .live { color: #82cfad; }
-.meter-name { color: #b1b4c4; }
-.meter-detail { color: #a0a3b5; }
-progressbar trough { background: rgba(200, 204, 230, 0.14); }
-.music-card { background: linear-gradient(120deg, rgba(54, 36, 49, 0.98), rgba(43, 37, 59, 0.97)); }
-.music-status { color: #dda0bb; }
-.music-artist { color: #b6a9c3; }
-.play-button { background: rgba(184, 164, 211, 0.19); }
-.transport-button:hover, .play-button:hover { background: rgba(184, 164, 211, 0.32); }
-.battery-card { background: linear-gradient(130deg, rgba(31, 51, 42, 0.98), rgba(31, 46, 42, 0.97)); }
-.small-detail { color: #a8b0c0; }
-.battery-card .small-detail { color: #9ec5b3; }
-.sound-controls button { background: rgba(167, 179, 211, 0.16); }
-.sound-controls button label { color: #d5def3; }
-.sound-controls button:hover { background: rgba(167, 179, 211, 0.30); }
-.corner-grip { background: rgba(207, 197, 228, 0.10); }
-.corner-grip:hover { background: rgba(207, 197, 228, 0.25); }
-.corner-grip:active { background: rgba(207, 197, 228, 0.38); }
-.close-widget label { color: #aaa5b8; }
-.close-widget:hover label { color: #ff98aa; }
-.width-grip label { color: #aaa5b8; }
-.corner-grip, .corner-grip:hover, .corner-grip:active { background: transparent; }
-.battery-ring { color: #63e778; background-color: rgba(185, 220, 196, 0.15); }
-.battery-ring.low { color: #ffc05a; }
+/* Muted surfaces preserve contrast without using luminous white panels. */
+.card { background: linear-gradient(145deg, #28313e, #1c232e); border-color: rgba(190,207,230,.14); box-shadow: inset 0 1px rgba(220,230,246,.06), 0 4px 10px rgba(0,0,0,.28); }
+label { color: #dce4ef; }
+.small-heading, .eyebrow { color: #a8bbd4; }
+.clock-card { background: linear-gradient(135deg, #243755, #172335); }
+.clock-card label { color: #e0e9f7; }
+.clock-card .eyebrow, .clock-card .clock-zone, .clock-date { color: #aabed9; }
+.calendar-title { color: #df8b93; }
+.weekdays label, .day.weekend { color: #9cacc2; }
+.day.outside { color: #65738a; }
+.day.today { color: #fff3f3; background: #ae4e5c; }
+.card-heading .live { color: #88bea3; }
+.meter-name, .meter-detail, .small-detail { color: #a6b4c8; }
+progressbar trough { background: rgba(180,200,225,.14); }
+progressbar progress { background: #7598c6; }
+.memory progressbar progress { background: #a28cbf; }
+.disk progressbar progress { background: #c7a078; }
+.music-card, .extra-pink { background: linear-gradient(145deg, #3a303c, #252632); }
+.music-status { color: #c49eaf; }
+.music-artist { color: #ac9daf; }
+.play-button { background: rgba(190,166,195,.15); }
+.transport-button:hover, .play-button:hover { background: rgba(190,166,195,.25); }
+.battery-card, .extra-green { background: linear-gradient(145deg, #293d35, #1b2926); }
+.battery-ring { color: #82bc98; background-color: rgba(157,195,172,.16); }
+.battery-ring.low { color: #d4ac73; }
 .battery-ring.unknown { color: transparent; }
-.battery-ring-value { color: #eef6ef; }
-.battery-ring-value.low { color: #ffc05a; }
-.battery-device-name { color: #c3dfd1; }
-.battery-device-detail { color: #95b4a2; }
+.battery-ring-value { color: #d8e8de; }
+.battery-ring-value.low { color: #d4ac73; }
+.battery-device-name { color: #bdcec2; }
+.battery-device-detail { color: #98afa1; }
+.sound-controls button { background: rgba(150,176,210,.13); }
+.sound-controls button label { color: #b2c4df; }
+.sound-controls button:hover { background: rgba(150,176,210,.24); }
+.extra-blue { background: linear-gradient(145deg, #2a3b52, #1b293b); }
+.extra-yellow { background: linear-gradient(145deg, #3c372e, #2a2723); }
+.extra-purple { background: linear-gradient(145deg, #373349, #252838); }
+.extra-neutral { background: linear-gradient(145deg, #2b3341, #1c2430); }
+.extra-heading { color: #a8bbd4; }
+.extra-detail, .extra-note, .web-host, .web-open-label { color: #a9b6c9; }
+.extra-button { background: rgba(176,195,220,.12); }
+.extra-button:hover, .extra-task:hover { background: rgba(176,195,220,.21); }
+.forecast-hour { background: rgba(165,189,218,.1); }
+.app-row { border-color: rgba(170,190,220,.1); }
+.web-card { background: linear-gradient(145deg, #322e45, #202b3a); }
+.web-letter { background: #655a7e; color: #e7dff3; }
+.web-open:hover { background: rgba(180,164,205,.08); }
+.card .extra-task.done label { color: #8d9aaf; }
+tooltip { background: #252e3c; }
+tooltip label { color: #dce4ef; }
 
-.web-card { background: linear-gradient(130deg, #302c40, #292e40); }
-.web-title { color: #f0ecff; }
-.web-host { color: #aaa2bf; }
-.web-open-label { color: #c0afe8; }
-
-.extra-blue { background: linear-gradient(130deg, #293750, #323047); }
-.extra-yellow { background: linear-gradient(130deg, #45402e, #493830); }
-.extra-green { background: linear-gradient(130deg, #273d37, #29394b); }
-.extra-heading { color: #bccbea; }
-.extra-detail { color: #a9b5c8; }
-.extra-value, .extra-city, .extra-world-time, .extra-network, .extra-note-title, .extra-note, .extra-task label, .extra-button label { color: #eef1f7; }
-.extra-button { background: rgba(197, 209, 234, .12); }
-.extra-button:hover, .extra-task:hover { background: rgba(197, 209, 234, .22); }
-
-.extra-pink { background: linear-gradient(130deg, #453247, #34304a); }
-.extra-purple { background: linear-gradient(130deg, #38324b, #2c354b); }
-.extra-neutral { background: linear-gradient(130deg, #303641, #262e3d); }
+.subtle-action label { color: #a6b4c8; }
+.task-check { color: #9eafc8; }

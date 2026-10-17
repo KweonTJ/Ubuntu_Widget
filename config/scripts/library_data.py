@@ -11,6 +11,8 @@ import time
 import uuid
 from zoneinfo import ZoneInfo
 import widget_store as store
+import app_links
+import todomate
 
 def settings():
     raw=store.read_json('widget-settings.json',{})
@@ -132,12 +134,16 @@ def snapshot(previous=None,now=None,now_epoch=None):
     remaining=max(0,math.ceil(focus['deadline']-epoch)) if focus['running'] else math.ceil(focus['remaining'])
     output.update(focus_time=f'{remaining//60:02}:{remaining%60:02}',focus_button='일시정지' if focus['running'] else '다시 시작' if focus['finished'] else '시작',
                   focus_detail='집중 완료' if focus['finished'] else f"{focus['minutes']}분 집중",focus_percent=round(100*(1-remaining/(focus['minutes']*60))))
+    output.update(app_links.snapshot())
+    output.update(todomate.snapshot())
     return (monotonic,*totals),output,focus['running'] and remaining==0
 
 def main():
     if len(sys.argv)>1 and sys.argv[1]=='action':action(sys.argv[2],sys.argv[3] if len(sys.argv)>3 else None);return
-    previous=None
+    previous=None;last_todomate_start=0
     while True:
+        if time.monotonic()-last_todomate_start>30:
+            todomate.ensure_running();last_todomate_start=time.monotonic()
         try:
             previous,data,finished=snapshot(previous)
             if finished and action('focus-complete'):

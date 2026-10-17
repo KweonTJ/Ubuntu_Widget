@@ -170,6 +170,8 @@ def edit_web(widget_id,name,url):
         save_webs(items)
 
 def delete_web(widget_id):
+    import stacks
+    stacks.detach(widget_id)
     item=find(widget_id)
     if item['kind']!='web':raise ValueError('기본 위젯은 목록에서 삭제할 수 없습니다.')
     if widget_id in visible():eww('close',widget_id)
@@ -219,6 +221,8 @@ def placement(widget_id,preset,point):
 
 def show(widget_id,preset=None,point=None):
     item=find(widget_id)
+    import stacks
+    if stacks.containing(widget_id):return stacks.show_member(widget_id,preset,point)
     if preset is not None and preset not in PRESETS:raise ValueError('잘못된 크기입니다.')
     ensure_daemon()
     with locked():
@@ -246,11 +250,15 @@ def show(widget_id,preset=None,point=None):
 
 def remove(widget_id):
     find(widget_id)
+    import stacks
+    stacks.detach(widget_id)
     if widget_id in visible():eww('close',widget_id)
     with locked():atomic_json('hidden-widgets.json',sorted(hidden()|{widget_id}))
 
 def open_visible():
-    items=[w['id'] for w in catalogue() if w['id'] not in hidden()]
+    import stacks
+    stacks.restore_positions();excluded=stacks.excluded()
+    items=[w['id'] for w in catalogue() if w['id'] not in hidden() and w['id'] not in excluded]
     if items:eww('open-many',*items)
 
 def restore():

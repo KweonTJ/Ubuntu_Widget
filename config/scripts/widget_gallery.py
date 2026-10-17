@@ -8,11 +8,16 @@ import threading
 from pathlib import Path
 import gi
 gi.require_version('Gtk','3.0');gi.require_version('Gdk','3.0')
-from gi.repository import Gtk,Gdk,Gio,GLib,Pango
+from gi.repository import GLib
+# PyGObject initializes GDK when Gtk is imported; set a stable WM_CLASS first.
+GLib.set_prgname('ubuntu-widget')
+from gi.repository import Gtk,Gdk,Gio,Pango
 import cairo
 import widget_store as store
 import connection_dialog
 import library_data
+import app_links
+import stacks
 import glass_effect as glass_effect
 from widget_catalog import CATEGORIES
 
@@ -46,17 +51,23 @@ class Preview(Gtk.DrawingArea):
     def draw(self,w,c):
         width,height=self.get_allocated_width(),self.get_allocated_height()
         scale=min(width/240,height/160);c.translate((width-240*scale)/2,(height-160*scale)/2);c.scale(scale,scale)
-        kind=self.item['kind'];bg,fg=self.COLORS.get('web' if kind=='webpreset' else kind,('#363e54','#b5ccff') if self.item.get('category')=='time' else ('#454031','#f3d78d') if self.item.get('category')=='productivity' else ('#2c403b','#9fe0c9'))
+        kind=self.item['kind'];dark=current_theme()=='dark'
+        tone=glass_effect.tone(self.item)
+        rgb=glass_effect.PALETTES['dark' if dark else 'light'][tone][0]
+        bg='#'+''.join(f'{int(n.strip()):02x}' for n in rgb.split(','))
+        fg='#dce4ef' if dark else '#253246'
+        if tone=='navy':fg='#e0e9f7'
+
         def color(s,a=1):c.set_source_rgba(*(int(s[i:i+2],16)/255 for i in (1,3,5)),a)
         def rounded(x,y,w,h,r):
             c.new_sub_path()
             for xx,yy,a in [(x+w-r,y+r,-90),(x+w-r,y+h-r,0),(x+r,y+h-r,90),(x+r,y+r,180)]:c.arc(xx,yy,r,math.radians(a),math.radians(a+90))
             c.close_path()
-        color(bg,.70 if self.glass else 1);rounded(1,1,238,158,22);c.fill()
+        color(bg,.94 if self.glass else 1);rounded(1,1,238,158,22);c.fill()
         if self.glass:
-            gradient=cairo.LinearGradient(0,0,240,160);gradient.add_color_stop_rgba(0,1,1,1,.23);gradient.add_color_stop_rgba(.45,1,1,1,.02);gradient.add_color_stop_rgba(1,1,1,1,.09)
+            gradient=cairo.LinearGradient(0,0,240,160);gradient.add_color_stop_rgba(0,1,1,1,.05 if dark else .20);gradient.add_color_stop_rgba(.45,1,1,1,.02);gradient.add_color_stop_rgba(1,1,1,1,.09)
             c.set_source(gradient);rounded(1,1,238,158,22);c.fill()
-            color('#ffffff',.32);c.set_line_width(1);rounded(1.5,1.5,237,157,22);c.stroke()
+            color('#ffffff',.14 if dark else .78);c.set_line_width(1);rounded(1.5,1.5,237,157,22);c.stroke()
         def text(s,x,y,size=14,col=fg,bold=False):
             color(col);c.select_font_face('Noto Sans CJK KR',cairo.FONT_SLANT_NORMAL,cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL);c.set_font_size(size);c.move_to(x,y);c.show_text(s)
         if kind=='clock':
@@ -67,7 +78,7 @@ class Preview(Gtk.DrawingArea):
             for i,day in enumerate('일월화수목금토'):text(day,23+i*29,49,10)
             for row,week in enumerate(calendar.Calendar(firstweekday=calendar.SUNDAY).monthdayscalendar(now.year,now.month)):
                 for col,day in enumerate(week):
-                    if day:text(str(day),23+col*29,68+row*16,11,fg if day==now.day else '#edf0f8')
+                    if day:text(str(day),23+col*29,68+row*16,11,fg if day==now.day else ('#b8c5d7' if dark else '#4b5b72'))
         elif kind=='system':
             for i,(name,val,col) in enumerate([('CPU','24%','#8fa9ff'),('RAM','48%','#c0a1ee'),('SSD','64%','#edb38c')]):
                 x=20+i*75;text(name,x,49,11,'#bbc1d3');text(val,x,91,27,col,True);color(col);rounded(x,108,53,5,2);c.fill()
@@ -76,7 +87,7 @@ class Preview(Gtk.DrawingArea):
                 c.set_line_width(8);color('#8ccfa0',.2);c.arc(x,64,32,0,math.tau);c.stroke();color(fg);c.arc(x,64,32,-math.pi/2,-math.pi/2+value*math.tau);c.stroke();text(str(round(value*100))+'%',x-25,125,22,bold=True)
                 color('#e3f4e7');c.set_line_width(2);rounded(x-13,55,26,17,3);c.stroke()
         elif kind in ('music','podcast'):
-            color('#b383af');rounded(20,26,64,64,15);c.fill();text('♪',37,73,39,'#ffffff');text('Music',100,51,15,bold=True);text('Now playing',100,75,11);text('◀     ▶     ▶',53,130,22)
+            color('#625161' if dark else '#b383af');rounded(20,26,64,64,15);c.fill();text('♪',37,73,39,'#ffffff');text('Music',100,51,15,bold=True);text('Now playing',100,75,11);text('◀     ▶     ▶',53,130,22)
         elif kind=='sound':
             text('SOUND',22,38,11);text('65%',22,99,44,bold=True);color(fg,.2);rounded(22,119,195,8,4);c.fill();color(fg);rounded(22,119,128,8,4);c.fill()
         elif kind=='worldclock':
@@ -91,7 +102,7 @@ class Preview(Gtk.DrawingArea):
         elif kind=='countdown':
             text('COUNTDOWN',22,37,11);text('D−30',22,105,48,bold=True);text('A day to remember',23,132,12)
         elif kind=='note':
-            text('MEMO',22,37,11)
+            text('OBSIDIAN',22,37,11)
             for i,length in enumerate([170,132,158,86]):
                 color(fg,.7 if i==0 else .35);rounded(22,57+i*23,length,6,3);c.fill()
         elif kind=='todo':
@@ -124,6 +135,9 @@ class Preview(Gtk.DrawingArea):
             for i,h in enumerate([20,30,18,42,35,50,29]):color(fg,.7);rounded(23+i*29,140-h,18,h,3);c.fill()
         elif kind=='home':
             text('HOME',22,34,11);color(fg);c.set_line_width(3);c.move_to(23,75);c.line_to(49,51);c.line_to(75,75);c.move_to(29,70);c.line_to(29,103);c.line_to(69,103);c.line_to(69,70);c.move_to(44,103);c.line_to(44,84);c.line_to(56,84);c.line_to(56,103);c.stroke();text('나의 기기',93,81,23,bold=True);text('Home Assistant 연결',22,135,13)
+        elif kind=='kdeconnect':
+            text('KDE CONNECT',22,34,11);text('나의 기기',22,76,24,bold=True)
+            text('연결됨 · 파일 공유',22,102,12);color(fg,.18);rounded(20,115,200,28,8);c.fill();text('파일 보내기',76,134,13,bold=True)
         else:
             color('#8d7ec0');rounded(24,25,52,52,14);c.fill();text(self.item['name'][0].upper(),40,63,30,'#ffffff',True)
             text('WEB APP',91,57,12,bold=True);text('Click to open',24,125,14)
@@ -144,24 +158,27 @@ class Gallery(Gtk.Application):
         if self.window is None:self.build()
         self.window.present()
     def build(self):
-        self.window=Gtk.ApplicationWindow(application=self,title='위젯 보관함');self.window.set_default_size(1140,860);self.window.set_position(Gtk.WindowPosition.CENTER)
+        self.window=Gtk.ApplicationWindow(application=self,title='위젯 보관함');self.window.set_default_size(1040,720);self.window.set_position(Gtk.WindowPosition.CENTER)
+        monitor=Gdk.Display.get_default().get_primary_monitor() or Gdk.Display.get_default().get_monitor(0)
+        area=monitor.get_workarea();self.window.set_default_size(min(1040,area.width-64),min(720,area.height-64))
         self.window.set_name('widget-gallery');self.window.connect('destroy',lambda *_:setattr(self,'window',None))
         self.window.connect('key-press-event',self.keypress)
         self.provider=Gtk.CssProvider();Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(),self.provider,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.apply_theme()
         root=Gtk.Box(orientation=Gtk.Orientation.VERTICAL);self.window.add(root)
-        header=Gtk.Box(spacing=12);header.get_style_context().add_class('gallery-header');root.pack_start(header,False,False,0)
-        titlebox=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=4);titlebox.pack_start(label('위젯 보관함','gallery-title'),False,False,0);titlebox.pack_start(label('날씨, 일정, 주식부터 나만의 웹사이트까지','muted'),False,False,0)
-        header.pack_start(titlebox,True,True,0)
-        header.pack_end(button('아이폰 위젯 안내',self.continuity_info),False,False,0)
-        header.pack_end(button('＋ 웹사이트',lambda:self.website_dialog(), 'primary'),False,False,0)
+        header=Gtk.HeaderBar();header.set_show_close_button(True);header.set_title('위젯 보관함')
+        header.get_style_context().add_class('gallery-toolbar');self.window.set_titlebar(header)
+        header.pack_end(button('웹사이트 추가…',lambda:self.website_dialog(), 'toolbar-action'))
         body=Gtk.Box();root.pack_start(body,True,True,0)
-        side=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=8);side.set_size_request(155,-1);side.get_style_context().add_class('gallery-sidebar');body.pack_start(side,False,False,0)
+        side=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=8);side.set_size_request(164,-1);side.get_style_context().add_class('gallery-sidebar');body.pack_start(side,False,False,0)
         side.pack_start(label('보관함','section-label'),False,False,6)
         self.category_buttons={}
+        icons={'all':'view-grid-symbolic','added':'user-desktop-symbolic','time':'preferences-system-time-symbolic','productivity':'view-list-symbolic','system':'computer-symbolic','media':'audio-headphones-symbolic','life':'weather-clear-symbolic','finance':'view-sort-descending-symbolic','web':'web-browser-symbolic'}
         for key,text in CATEGORIES:
-            b=button(text,lambda k=key:self.change_category(k),'category');side.pack_start(b,False,False,0);self.category_buttons[key]=b
-        hint=label('위젯을 골라 나만의\n바탕화면을 만들어 보세요.','muted');hint.set_line_wrap(True);side.pack_start(hint,False,False,20)
+            b=Gtk.Button();b.get_style_context().add_class('category')
+            row=Gtk.Box(spacing=10);icon=Gtk.Image.new_from_icon_name(icons.get(key,'view-grid-symbolic'),Gtk.IconSize.MENU);icon.set_pixel_size(15)
+            row.pack_start(icon,False,False,0);row.pack_start(label(text),True,True,0);b.add(row)
+            b.connect('clicked',lambda _,k=key:self.change_category(k));side.pack_start(b,False,False,0);self.category_buttons[key]=b
         side.pack_start(Gtk.Box(),True,True,0)
         side.pack_start(label('글래스 효과','section-label'),False,False,4)
         glass_row=Gtk.Box(spacing=8);glass_row.pack_start(label('전체 위젯'),True,True,0)
@@ -169,74 +186,77 @@ class Gallery(Gtk.Application):
         self.glass_switch.get_accessible().set_name('전체 위젯 글래스 효과')
         self.glass_switch.connect('notify::active',lambda switch,_:self.glass_changed(switch))
         glass_row.pack_end(self.glass_switch,False,False,0);side.pack_start(glass_row,False,False,0)
-        glass_hint=label('반투명 배경과 은은한 흐림','muted');side.pack_start(glass_hint,False,False,0)
+        glass_hint=label('배경 투명도와 흐림','muted');side.pack_start(glass_hint,False,False,0)
         side.pack_start(label('위젯 테마','section-label'),False,False,12)
         self.theme=Gtk.ComboBoxText()
         for key,text in [('auto','시스템 설정 따르기'),('light','라이트'),('dark','다크')]:self.theme.append(key,text)
         try:mode=(store.CONFIG/'theme-mode').read_text().strip()
         except OSError:mode='auto'
         self.theme.set_active_id(mode);self.theme.connect('changed',self.theme_changed);side.pack_start(self.theme,False,False,0)
-        center=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=12);center.get_style_context().add_class('gallery-center');center.set_size_request(540,-1);body.pack_start(center,True,True,0)
-        self.search=Gtk.SearchEntry(placeholder_text='이름이나 기능으로 검색 · Ctrl+F');self.search.connect('search-changed',lambda *_:self.refresh_tiles());center.pack_start(self.search,False,False,0)
+        center=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=12);center.get_style_context().add_class('gallery-center');center.set_size_request(320,-1);body.pack_start(center,True,True,0)
+        self.search=Gtk.SearchEntry(placeholder_text='위젯 검색');self.search.connect('search-changed',lambda *_:self.refresh_tiles());center.pack_start(self.search,False,False,0)
         self.count=label('','muted');center.pack_start(self.count,False,False,0)
         scroll=Gtk.ScrolledWindow();scroll.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.AUTOMATIC);center.pack_start(scroll,True,True,0)
-        self.flow=Gtk.FlowBox();self.flow.set_min_children_per_line(3);self.flow.set_max_children_per_line(3);self.flow.set_selection_mode(Gtk.SelectionMode.NONE);self.flow.set_row_spacing(12);self.flow.set_column_spacing(12);self.flow.set_valign(Gtk.Align.START);scroll.add(self.flow)
-        self.details=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=12);self.details.set_size_request(270,-1);self.details.get_style_context().add_class('gallery-details');detail_scroll=Gtk.ScrolledWindow();detail_scroll.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.AUTOMATIC);detail_scroll.add(self.details);body.pack_start(detail_scroll,False,False,0)
+        self.flow=Gtk.FlowBox();self.flow.set_min_children_per_line(1);self.flow.set_max_children_per_line(3);self.flow.set_selection_mode(Gtk.SelectionMode.NONE);self.flow.set_row_spacing(8);self.flow.set_column_spacing(8);self.flow.set_valign(Gtk.Align.START);scroll.add(self.flow)
+        self.details=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=12);self.details.set_size_request(236,-1);self.details.get_style_context().add_class('gallery-details');detail_scroll=Gtk.ScrolledWindow();detail_scroll.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.AUTOMATIC);detail_scroll.add(self.details);body.pack_start(detail_scroll,False,False,0)
         footer=Gtk.Box(spacing=8);footer.get_style_context().add_class('gallery-footer');root.pack_start(footer,False,False,0)
         self.spinner=Gtk.Spinner();footer.pack_start(self.spinner,False,False,0)
-        self.status=label('위젯을 선택한 뒤 추가하거나, 미리보기를 바탕화면으로 끌어 놓으세요.','muted');self.status.set_ellipsize(Pango.EllipsizeMode.END);footer.pack_start(self.status,True,True,0)
-        footer.pack_end(button('완료',self.window.close),False,False,0)
+        self.status=label('위젯을 선택하세요.','muted');self.status.set_ellipsize(Pango.EllipsizeMode.END);footer.pack_start(self.status,True,True,0)
+        footer.pack_end(button('닫기',self.window.close),False,False,0)
         self.selected=store.library()[0]['id'];self.refresh_tiles();self.refresh_details();self.change_category('all');self.window.show_all()
         self.monitor=Gio.File.new_for_path(str(store.CONFIG)).monitor_directory(Gio.FileMonitorFlags.NONE,None)
         self.monitor.connect('changed',self.files_changed)
         self.settings=Gio.Settings.new('org.gnome.desktop.interface');self.settings.connect('changed::color-scheme',lambda *_:self.apply_theme());self.settings.connect('changed::gtk-theme',lambda *_:self.apply_theme())
-    def continuity_info(self):
-        d=Gtk.MessageDialog(transient_for=self.window,modal=True,message_type=Gtk.MessageType.INFO,buttons=Gtk.ButtonsType.CLOSE,text='아이폰 연속성 위젯')
-        d.format_secondary_text('Apple의 아이폰 위젯 연속성은 macOS 기능으로 Ubuntu에서는 직접 사용할 수 없습니다.\n\n웹으로 제공되는 서비스는 ＋ 웹사이트에서 바로가기로 추가할 수 있습니다. 아이폰 앱 화면이나 알림을 미러링하는 기능은 제공하지 않습니다.')
-        d.run();d.destroy()
     def keypress(self,_window,event):
         if event.keyval==Gdk.KEY_Escape:self.window.close();return True
         if event.state&Gdk.ModifierType.CONTROL_MASK and event.keyval==Gdk.KEY_f:self.search.grab_focus();return True
         return False
     def apply_theme(self):
         dark=current_theme()=='dark'
-        bg,panel,text,muted,border,tile,hover,accent=('#17191f','#1f222a','#f1f3f8','#a5adbd','#343945','#292e39','#353d4d','#96b6ff') if dark else ('#f7f8fb','#eef0f5','#252b38','#6f788b','#dce0e9','#ffffff','#e9effb','#365fc4')
-        css=f'''
+        Gtk.Settings.get_default().set_property('gtk-application-prefer-dark-theme',dark)
+        bg,panel,text,muted,border,hover,selected=('#202126','#26272c','#e0e2e8','#a1a7b3','#373940','#303239','#303c50') if dark else ('#ffffff','#f1f2f5','#252a34','#687180','#dedfe4','#e9ebf0','#e4ecfa')
+        css=f"""
 #widget-gallery {{ background:{bg}; color:{text}; font-family:sans-serif; font-size:12px; }}
 #widget-gallery label {{ color:{text}; }}
-#widget-gallery .muted, #widget-gallery .section-label {{ color:{muted}; font-size:10px; }}
-#widget-gallery .gallery-header {{ padding:22px 24px; border-bottom:1px solid {border}; }}
-#widget-gallery .gallery-title {{ font-size:25px; font-weight:700; letter-spacing:-0.8px; }}
-#widget-gallery .gallery-sidebar {{ background:{panel}; padding:20px 12px; border-right:1px solid {border}; }}
-#widget-gallery .gallery-center {{ padding:20px 18px; }}
-#widget-gallery .gallery-details {{ background:{panel}; padding:22px 18px; border-left:1px solid {border}; }}
-#widget-gallery .gallery-footer {{ padding:14px 20px; border-top:1px solid {border}; }}
-#widget-gallery button {{ background:{tile}; color:{text}; border:1px solid {border}; border-radius:10px; padding:9px 12px; box-shadow:none; text-shadow:none; }}
+#widget-gallery .muted, #widget-gallery .section-label {{ color:{muted}; font-size:11px; }}
+#widget-gallery .section-label {{ font-weight:600; padding:4px 6px; }}
+#widget-gallery headerbar {{ background:{panel}; color:{text}; border-bottom:1px solid {border}; box-shadow:none; }}
+#widget-gallery .gallery-sidebar {{ background:{panel}; padding:16px 10px; border-right:1px solid {border}; }}
+#widget-gallery .gallery-center {{ padding:18px; }}
+#widget-gallery .gallery-details {{ background:{panel}; padding:20px 18px; border-left:1px solid {border}; }}
+#widget-gallery .gallery-footer {{ padding:10px 16px; border-top:1px solid {border}; }}
+#widget-gallery button {{ background:transparent; color:{text}; border:1px solid {border}; border-radius:7px; padding:7px 10px; box-shadow:none; text-shadow:none; }}
 #widget-gallery button:hover {{ background:{hover}; }}
-#widget-gallery button.primary {{ background:#3c68d6; color:#fff; border-color:#3c68d6; font-weight:600; }}
+#widget-gallery button.primary {{ background:#376ac3; color:#fff; border-color:#376ac3; font-weight:600; }}
 #widget-gallery button.primary label {{ color:#fff; }}
-#widget-gallery button.category, #widget-gallery button.preset-site {{ background:transparent; border-color:transparent; }}
-#widget-gallery button.category.selected {{ background:{hover}; border-color:{border}; }}
-#widget-gallery button.tile {{ padding:9px; border-radius:17px; }}
-#widget-gallery button.tile.selected {{ border:2px solid {accent}; padding:8px; }}
-#widget-gallery .tile-name {{ font-size:12px; font-weight:600; }}
-#widget-gallery .tile-state {{ font-size:9px; color:{muted}; }}
-#widget-gallery .detail-title {{ font-size:20px; font-weight:700; }}
-#widget-gallery .description {{ font-size:11px; color:{muted}; }}
-#widget-gallery entry, #widget-gallery combobox button {{ background:{tile}; color:{text}; border:1px solid {border}; border-radius:9px; padding:8px; }}
-#widget-gallery button.size:checked {{ background:{hover}; border-color:{accent}; }}
-#widget-gallery button.danger label {{ color:#e1848f; }}
+#widget-gallery button.category {{ border:none; padding:8px; border-radius:6px; }}
+#widget-gallery button.category label {{ font-size:12px; }}
+#widget-gallery button.category.selected {{ background:{selected}; }}
+#widget-gallery button.tile {{ border:1px solid transparent; padding:9px 6px; border-radius:10px; }}
+#widget-gallery button.tile.selected {{ background:{selected}; }}
+#widget-gallery .tile-name {{ font-size:12px; font-weight:500; }}
+#widget-gallery .tile-state {{ font-size:10px; color:{muted}; }}
+#widget-gallery .detail-title {{ font-size:19px; font-weight:600; }}
+#widget-gallery .description {{ font-size:12px; color:{muted}; }}
+#widget-gallery entry placeholder {{ color:{muted}; }}
+#widget-gallery entry, #widget-gallery combobox button {{ background:{bg}; color:{text}; border:1px solid {border}; border-radius:7px; padding:7px; }}
+#widget-gallery button.size {{ border-radius:6px; padding:6px; }}
+#widget-gallery button.size:checked {{ background:{selected}; border-color:#6a86b3; }}
+#widget-gallery button.danger label {{ color:{'#de929c' if dark else '#ac3e4e'}; }}
 #widget-gallery button:disabled {{ opacity:.45; }}
-#widget-gallery switch {{ border-radius:14px; background:{border}; border:1px solid {border}; }}
-#widget-gallery switch:checked {{ background:#3c68d6; border-color:#3c68d6; }}
-#widget-gallery switch slider {{ min-width:18px; min-height:18px; margin:2px; border-radius:12px; background:#f6f8ff; }}
-'''
+#widget-gallery switch {{ border-radius:13px; background:{border}; border:1px solid {border}; }}
+#widget-gallery switch:checked {{ background:#4375c9; }}
+#widget-gallery switch slider {{ min-width:16px; min-height:16px; margin:2px; border-radius:12px; background:#f0f2f6; }}
+"""
         self.provider.load_from_data(css.encode())
+        if hasattr(self,'flow') and self.window is not None:
+            self.refresh_tiles();self.refresh_details()
     def files_changed(self,_mon,file,other,_event):
         names={f.get_basename() for f in (file,other) if f}
         if names&{'web-widgets.json','hidden-widgets.json','enabled-widgets.json'} and not self.busy:GLib.idle_add(self.refresh_all)
         if 'theme-mode' in names:GLib.idle_add(self.apply_theme)
         if 'glass-settings.json' in names:GLib.idle_add(self.sync_glass)
+        if 'widget-stacks.json' in names:GLib.idle_add(self.refresh_all)
     def sync_glass(self):
         if self.window is None:return False
         self._syncing_glass=True
@@ -275,7 +295,7 @@ class Gallery(Gtk.Application):
             if item['id']==self.selected:b.get_style_context().add_class('selected')
             content=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6);content.pack_start(Preview(item),False,False,0)
             name=label(item['name'],'tile-name');name.set_ellipsize(Pango.EllipsizeMode.END);name.set_max_width_chars(16);content.pack_start(name,False,False,0)
-            content.pack_start(label('웹앱 바로가기' if item['kind']=='webpreset' else '추가 가능' if item['id'] in hidden else '✓ 바탕화면에 추가됨','tile-state'),False,False,0)
+            content.pack_start(label('웹앱 바로가기' if item['kind']=='webpreset' else '스택' if stacks.containing(item['id']) else '' if item['id'] in hidden else '추가됨','tile-state'),False,False,0)
             b.add(content);b.connect('clicked',lambda _,i=item['id']:self.select(i));self.flow.add(b)
         self.flow.show_all()
     def select(self,widget_id):
@@ -312,15 +332,45 @@ class Gallery(Gtk.Application):
         self.dimensions=label('','muted');self.details.pack_start(self.dimensions,False,False,0);self.set_size(self.preset)
         added=item['kind']!='webpreset' and item['id'] not in store.hidden()
         self.details.pack_start(button('선택한 크기 적용' if added else '＋ 바탕화면에 추가',self.add_selected,'primary'),False,False,0)
+        if added:
+            group=stacks.containing(item['id'])
+            if group:
+                names=' · '.join(store.find(w)['name'] for w in group['members'])
+                hint=label('스택: '+names,'muted');hint.set_line_wrap(True);hint.set_max_width_chars(26)
+                self.details.pack_start(hint,False,False,0)
+                self.details.pack_start(button('다음 위젯 보기',lambda:self.work(lambda:stacks.cycle(item['id']),'다음 위젯으로 전환했습니다.')),False,False,0)
+                self.details.pack_start(button('스택 해제',lambda:self.work(lambda:stacks.dissolve(item['id']),'각 위젯을 이전 위치로 되돌렸습니다.')),False,False,0)
+            else:self.details.pack_start(button('스택 만들기…',lambda:self.stack_dialog(item)),False,False,0)
         if added:self.details.pack_start(button('바탕화면에서 제거',lambda:self.work(lambda:store.remove(item['id']),'바탕화면에서 제거했습니다.')),False,False,0)
         if item.get('configurable'):
-            self.details.pack_start(button('연결·설정' if item['kind'] in ('stocks','weather','home','screentime') else '내용·시간 설정',lambda:self.configure_dialog(item)),False,False,0)
+            self.details.pack_start(button('노트 선택…' if item['kind']=='note' else 'todomate 연결…' if item['kind']=='todo' else '연결·설정' if item['kind'] in ('stocks','weather','home','screentime') else '내용·시간 설정',lambda:self.configure_dialog(item)),False,False,0)
         if item['kind']=='web':
             self.details.pack_start(button('사이트 열기',lambda:store.launch_web(item['id'])),False,False,0)
             self.details.pack_start(button('이름·주소 편집',lambda:self.website_dialog(item['name'],item['url'],item['id'])),False,False,0)
         self.details.pack_start(Gtk.Box(),True,True,0)
-        tip=label('미리보기는 예시입니다. 추가한 위젯은 실제 데이터로 표시됩니다.\n\n위의 미리보기를 바탕화면으로 끌어 놓아도 추가할 수 있습니다.','muted');tip.set_line_wrap(True);tip.set_max_width_chars(28);self.details.pack_start(tip,False,False,0)
+        tip=label('미리보기를 바탕화면으로 끌어 놓아도 추가할 수 있습니다.','muted');tip.set_line_wrap(True);tip.set_max_width_chars(28);self.details.pack_start(tip,False,False,0)
         self.details.show_all()
+    def stack_dialog(self,item):
+        peers=stacks.candidates(item['id'])
+        positions=store.read_json('positions.json',{});rect=stacks.rect(item['id'],positions)
+        dialog=Gtk.Dialog(title='위젯 스택',transient_for=self.window,modal=True)
+        dialog.set_default_size(380,320);dialog.add_button('취소',Gtk.ResponseType.CANCEL)
+        create=dialog.add_button('스택 만들기',Gtk.ResponseType.OK);create.set_sensitive(False)
+        box=dialog.get_content_area();box.set_border_width(20);box.set_spacing(10)
+        heading=label(f"{item['name']} · {rect['width']} × {rect['height']}");box.pack_start(heading,False,False,0)
+        hint=label('같은 크기의 위젯을 골라 한 자리에 묶으세요. 아래 표시를 클릭하거나 휠로 전환합니다.' if peers else '같은 크기의 위젯을 먼저 바탕화면에 추가해 주세요.');hint.set_line_wrap(True);hint.set_max_width_chars(38);box.pack_start(hint,False,False,0)
+        checks=[]
+        scroll=Gtk.ScrolledWindow();scroll.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.AUTOMATIC);scroll.set_min_content_height(120)
+        choices=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6);scroll.add(choices);box.pack_start(scroll,True,True,0)
+        for peer in peers:
+            check=Gtk.CheckButton(label=peer['name']);checks.append((peer['id'],check));choices.pack_start(check,False,False,0)
+            check.connect('toggled',lambda *_:create.set_sensitive(any(c.get_active() for _,c in checks)))
+        dialog.show_all()
+        if dialog.run()==Gtk.ResponseType.OK:
+            members=[item['id']]+[wid for wid,c in checks if c.get_active()];dialog.destroy()
+            self.work(lambda:stacks.create(members),'스택을 만들었습니다. 위젯 아래 숫자를 클릭하거나 휠로 전환하세요.')
+        else:dialog.destroy()
+
     def set_size(self,key):
         self.preset=key
         if hasattr(self,'dimensions'):
@@ -347,6 +397,10 @@ class Gallery(Gtk.Application):
         threading.Thread(target=worker,daemon=True).start()
     def configure_dialog(self,item):
         kind=item['kind']
+        if kind=='note':return app_links.choose_note(self.window)
+        if kind=='todo':
+            import subprocess
+            return subprocess.Popen(['/usr/bin/python3',str(store.CONFIG/'scripts/manager-launch.py'),'app','todomate'])
         if kind in ('stocks','weather','home','screentime'):return connection_dialog.open_dialog(self,item)
         cfg=library_data.config(kind)
         d=Gtk.Dialog(title=item['name']+' 설정',transient_for=self.window,modal=True)

@@ -45,31 +45,31 @@ def set_enabled(value,widget_id=None):
 
 PALETTES={
     'dark':{
-        'neutral':('45, 51, 65','29, 34, 46'),
-        'blue':('55, 77, 111','44, 48, 81'),
-        'pink':('88, 58, 86','53, 45, 75'),
-        'green':('46, 80, 65','35, 54, 53'),
-        'purple':('72, 62, 101','44, 50, 76'),
-        'yellow':('97, 78, 43','71, 52, 40')},
+        'navy':('36, 55, 85','23, 35, 53'),
+        'neutral':('43, 51, 65','28, 36, 48'),
+        'blue':('42, 59, 82','27, 41, 59'),
+        'pink':('58, 48, 60','37, 38, 50'),
+        'green':('41, 61, 53','27, 41, 38'),
+        'purple':('55, 51, 73','37, 40, 56'),
+        'yellow':('60, 55, 46','42, 39, 35')},
     'light':{
-        'neutral':('255, 255, 255','230, 237, 248'),
-        'blue':('233, 244, 255','218, 225, 252'),
-        'pink':('255, 239, 249','237, 226, 253'),
-        'green':('235, 255, 244','214, 240, 232'),
-        'purple':('244, 237, 255','222, 233, 255'),
-        'yellow':('255, 248, 221','255, 232, 208')}
+        'navy':('37, 63, 105','22, 41, 66'),
+        'neutral':('251, 252, 254','232, 237, 244'),
+        'blue':('233, 241, 252','220, 232, 244'),
+        'pink':('243, 234, 240','233, 226, 236'),
+        'green':('233, 243, 239','222, 234, 230'),
+        'purple':('238, 234, 250','226, 227, 239'),
+        'yellow':('251, 245, 232','238, 228, 210')}
 }
 
 def tone(item):
-    if item['kind'] in ('music','podcast','agenda'):return 'pink'
-    if item['kind'] in ('stocks','weather'):return 'blue'
-    if item['kind']=='home':return 'yellow'
-    if item['kind']=='screentime':return 'purple'
-    if item['kind'] in ('battery',):return 'green'
-    if item['kind'] in ('web','webpreset'):return 'purple'
-    if item['kind']=='clock' or item.get('category')=='time' and item['kind']!='calendar':return 'blue'
-    if item.get('category')=='productivity':return 'yellow'
-    if item['kind'] not in ('system','calendar','sound') and item.get('category')=='system':return 'green'
+    kind=item['kind']
+    if kind=='clock':return 'navy'
+    if kind in ('music','podcast','agenda'):return 'pink'
+    if kind in ('weather','stocks','worldclock','today','dayprogress','yearprogress','countdown'):return 'blue'
+    if kind in ('battery','cpu','memory','disk','network','uptime','kdeconnect'):return 'green'
+    if kind in ('note','screentime','web','webpreset'):return 'purple'
+    if kind in ('focus','home'):return 'yellow'
     return 'neutral'
 
 def stylesheet(mode,items=None,value=None):
@@ -78,9 +78,9 @@ def stylesheet(mode,items=None,value=None):
     if not active:return '/* Glass disabled. Original card palette remains active. */\n'
     if mode not in PALETTES:raise ValueError('Invalid palette')
     selector=lambda item:'.glass-'+item['id']
-    border='.29' if mode=='dark' else '.78'
+    border='.14' if mode=='dark' else '.78'
     shade='.24' if mode=='dark' else '.12'
-    sheen='.20' if mode=='dark' else '.65'
+    sheen='.06' if mode=='dark' else '.65'
     lines=['/* Generated glass palette. Toggle it in the widget library. */\n',
            ',\n'.join(selector(i) for i in active)+' {\n'+
            f'  border-color: rgba(255, 255, 255, {border});\n'+
@@ -90,8 +90,8 @@ def stylesheet(mode,items=None,value=None):
         group=[i for i in active if tone(i)==name]
         if not group:continue
         a,b=colors
-        alpha=('.64','.42') if mode=='dark' else ('.78','.60')
-        highlight='.12' if mode=='dark' else '.36'
+        alpha=('.94','.90') if mode=='dark' or name=='navy' else ('.92','.86')
+        highlight='.05' if mode=='dark' or name=='navy' else '.20'
         lines.append(',\n'.join(selector(i) for i in group)+' {\n'+
             f'  background: linear-gradient(145deg, rgba(255, 255, 255, {highlight}), rgba(255, 255, 255, .01) 45%, rgba(255, 255, 255, .06)), linear-gradient(125deg, rgba({a}, {alpha[0]}), rgba({b}, {alpha[1]}));\n'+
             '}\n')

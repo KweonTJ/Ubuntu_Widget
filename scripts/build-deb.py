@@ -19,7 +19,7 @@ def build(binary, output, revision='1'):
     if not re.fullmatch(r'[0-9][A-Za-z0-9.+~:-]*', version):
         raise ValueError('Invalid Debian package version.')
     data = binary.read_bytes()
-    if not data.startswith(b'\x7fELF') or b'eww-native-draggable' not in data or b'resize-min-width' not in data:
+    if not data.startswith(b'\x7fELF') or b'eww-native-draggable' not in data or b'resize-min-width' not in data or b'EWW_SOCKET_ID' not in data:
         raise ValueError('Build the native-controls Eww engine first.')
     if re.search(rb'/(?:home|Users)/[^\s/"\x27]+/', data):
         raise ValueError('Developer home paths found in the engine. Rebuild using scripts/build-eww.sh.')
@@ -43,7 +43,7 @@ def build(binary, output, revision='1'):
         copy(ROOT / 'packaging/ubuntu-widget', 'usr/bin/ubuntu-widget', True)
         copy(ROOT / 'bin/ubuntu-widget', 'usr/share/ubuntu-widget/bin/ubuntu-widget', True)
         copy(ROOT / 'scripts/initialize.py', 'usr/share/ubuntu-widget/scripts/initialize.py')
-        copy(ROOT / 'packaging/ubuntu-widget.desktop', 'usr/share/applications/ubuntu-widget.desktop')
+        copy(ROOT / 'packaging/ubuntu-widget.desktop', 'usr/share/applications/local.ubuntu.WidgetLibrary.desktop')
         copy(ROOT / 'config/assets/widget-gallery.svg', 'usr/share/icons/hicolor/scalable/apps/ubuntu-widget.svg')
         for source in sorted((ROOT / 'config').rglob('*')):
             if source.is_file() and '__pycache__' not in source.parts and source.suffix != '.pyc':
@@ -62,7 +62,7 @@ def build(binary, output, revision='1'):
         (debian / 'control').write_text('Source: ubuntu-widget\nSection: x11\nPriority: optional\nMaintainer: KweonTJ <144107369+KweonTJ@users.noreply.github.com>\n\nPackage: ubuntu-widget\nArchitecture: amd64\nDescription: desktop widget library\n')
         shlibs = subprocess.check_output(['dpkg-shlibdeps', '-O', '-e' + str(stage / 'usr/lib/ubuntu-widget/eww')], cwd=temporary, text=True)
         dependencies = shlibs.strip().removeprefix('shlibs:Depends=')
-        runtime = 'python3 (>= 3.10), python3-gi, python3-gi-cairo, python3-cairo, python3-dbus, tzdata, gir1.2-gtk-3.0, gir1.2-secret-1, gnome-keyring, gsettings-desktop-schemas, dconf-gsettings-backend, librsvg2-common, libx11-6, libxss1, libxtst6, x11-utils, pulseaudio-utils, libnotify-bin, xdg-utils, systemd, dbus-user-session'
+        runtime = 'python3 (>= 3.10), python3-gi, python3-gi-cairo, python3-cairo, python3-dbus, tzdata, gir1.2-gtk-3.0, gir1.2-webkit2-4.0 | gir1.2-webkit2-4.1, gir1.2-secret-1, gnome-keyring, gsettings-desktop-schemas, dconf-gsettings-backend, librsvg2-common, libx11-6, libxss1, libxtst6, x11-utils, pulseaudio-utils, libnotify-bin, xdg-utils, systemd, dbus-user-session'
         control = stage / 'DEBIAN'
         control.mkdir()
         size = sum(p.stat().st_size for p in stage.rglob('*') if p.is_file())
@@ -76,8 +76,9 @@ Homepage: https://github.com/KweonTJ/Ubuntu_Widget
 Installed-Size: {(size + 1023) // 1024}
 Depends: {dependencies}, {runtime}
 Recommends: fonts-noto-cjk
+Suggests: kdeconnect
 Description: macOS-inspired desktop widget library for GNOME on Xorg
- Browse 34 widget and website choices with native grid movement, resizing,
+ Browse 35 widget and website choices with native grid movement, resizing,
  light/dark themes and optional glass effects. Includes the patched Eww engine.
  User data is initialized on first launch, never by a root install script.
  Verified on Ubuntu 22.04 amd64 with GNOME/Xorg. Wayland is unsupported.

@@ -1,10 +1,10 @@
 ; Built-in catalogue widgets. Shared sizing, themes and native controls.
 (defwidget extra-card [kind title tone]
- (box :class {"card extra-card glass-uw-" + kind + " extra-" + tone + (sizes[kind].height < 160 ? " compact" : "")}
-   :orientation "v" :space-evenly false :vexpand true
-   (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
-     (box :orientation "v" :space-evenly false :spacing 10 :hexpand true :vexpand true
-       (label :class "extra-heading" :text title :xalign 0)
+ (box :class {"card extra-card glass-uw-" + kind + " extra-" + tone + (" size-" + sizes[kind].mode)}
+   :style {"padding: " + sizes[kind].padding + "px;"} :orientation "v" :space-evenly false :vexpand true
+   (scroll :class "content-scroll" :hscroll true :vscroll true :hexpand true :vexpand true
+     (box :orientation "v" :space-evenly false :spacing {sizes[kind].gap} :hexpand true :vexpand true
+       (label :visible {sizes[kind].height >= 128} :class "extra-heading" :style {"font-size: " + sizes[kind].detail + "px;"} :text title :xalign 0)
        (children)))))
 (defwidget worldclock-card []
  (extra-card :kind "worldclock" :title "세계 시계" :tone "blue"
@@ -13,7 +13,7 @@
      (box :space-evenly false :spacing 8
        (label :class "extra-city" :text {city.city} :xalign 0 :hexpand true)
        (label :class "extra-detail" :text {city.date})
-       (label :class "extra-world-time" :text {city.time}))))))
+       (label :class "extra-world-time" :style {"font-size: " + sizes.worldclock.title * 1.4 + "px;"} :text {city.time}))))))
 (defwindow uw-worldclock
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -21,7 +21,7 @@
  (movable-card :theme appearance :name "uw-worldclock" (worldclock-card)))
 (defwidget today-card []
  (extra-card :kind "today" :title "오늘 날짜" :tone "blue"
-  (label :class "extra-value" :truncate true :style {sizes["today"].height < 160 || sizes["today"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {extra.today ?: "—"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.month + " · " + extra.weekday} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {extra.week} :xalign 0 :wrap true :wrap-mode "wordchar")))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["today"].hero + "px;"} :text {extra.today ?: "—"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.month + " · " + extra.weekday} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {extra.week} :xalign 0 :wrap true :wrap-mode "wordchar")))
 (defwindow uw-today
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -29,7 +29,7 @@
  (movable-card :theme appearance :name "uw-today" (today-card)))
 (defwidget dayprogress-card []
  (extra-card :kind "dayprogress" :title "하루 진행률" :tone "blue"
-  (label :class "extra-value" :truncate true :style {sizes["dayprogress"].height < 160 || sizes["dayprogress"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {(extra.day_percent ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {extra.day_percent ?: 0})(label :class "extra-detail" :text {extra.day_left ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["dayprogress"].hero + "px;"} :text {(extra.day_percent ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {extra.day_percent ?: 0})(label :class "extra-detail" :text {extra.day_left ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
 (defwindow uw-dayprogress
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -37,7 +37,7 @@
  (movable-card :theme appearance :name "uw-dayprogress" (dayprogress-card)))
 (defwidget yearprogress-card []
  (extra-card :kind "yearprogress" :title "올해 진행률" :tone "blue"
-  (label :class "extra-value" :truncate true :style {sizes["yearprogress"].height < 160 || sizes["yearprogress"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {(extra.year_percent ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {extra.year_percent ?: 0})(label :class "extra-detail" :text {extra.year_left ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["yearprogress"].hero + "px;"} :text {(extra.year_percent ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {extra.year_percent ?: 0})(label :class "extra-detail" :text {extra.year_left ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
 (defwindow uw-yearprogress
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -45,32 +45,40 @@
  (movable-card :theme appearance :name "uw-yearprogress" (yearprogress-card)))
 (defwidget countdown-card []
  (extra-card :kind "countdown" :title "디데이" :tone "blue"
-  (label :class "extra-value" :truncate true :style {sizes["countdown"].height < 160 || sizes["countdown"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {extra.countdown_value ?: "D-DAY"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.countdown_title ?: "디데이"} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {extra.countdown_date ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-countdown" (label :text "날짜 설정"))))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["countdown"].hero + "px;"} :text {extra.countdown_value ?: "D-DAY"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.countdown_title ?: "디데이"} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {extra.countdown_date ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-countdown" (label :text "날짜 설정"))))
 (defwindow uw-countdown
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
  (movable-card :theme appearance :name "uw-countdown" (countdown-card)))
 (defwidget note-card []
- (extra-card :kind "note" :title "메모" :tone "yellow"
-  (label :class "extra-note-title" :text {extra.note_title ?: "메모"} :xalign 0 :wrap true :wrap-mode "wordchar")
- (label :class "extra-note" :text {extra.note_text ?: ""} :xalign 0 :yalign 0 :wrap true :wrap-mode "wordchar" :vexpand true)(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-note" (label :text "편집"))))
+ (extra-card :kind "note" :title "OBSIDIAN" :tone "purple"
+  (label :class "extra-note-title" :style {"font-size: " + sizes.note.title + "px;"} :text {extra.obsidian_title ?: "Obsidian"} :xalign 0 :wrap true :wrap-mode "wordchar")
+  (label :class "extra-note" :text {extra.obsidian_text ?: "표시할 노트를 선택하세요."} :xalign 0 :yalign 0 :wrap true :wrap-mode "wordchar" :vexpand true)
+  (box :space-evenly true :spacing 8 :orientation {sizes.note.width < 264 ? "v" : "h"}
+   (button :class "extra-button" :onclick "./scripts/app_links.py open obsidian" (label :text "Obsidian에서 열기"))
+   (button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-note" (label :text "노트 선택")))))
 (defwindow uw-note
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
  (movable-card :theme appearance :name "uw-note" (note-card)))
 (defwidget todo-card []
- (extra-card :kind "todo" :title "할 일" :tone "yellow"
-  (label :class "extra-detail" :text {extra.tasks_count ?: "0 / 0 완료"} :xalign 0)
- (label :class "extra-detail" :visible {extra.tasks_empty ?: false} :text "할 일을 추가해 보세요." :xalign 0 :wrap true :wrap-mode "wordchar")
- (box :orientation "v" :space-evenly false :spacing 7 :vexpand true
-   (for task in {extra.tasks ?: "[]"}
-     (button :class {"extra-task " + (task.done ? "done" : "")}
-       :onclick {"./scripts/library_data.py action toggle-task " + task.id}
-       (box :space-evenly false :spacing 8
-         (label :text {task.done ? "☑" : "☐"})
-         (label :text {task.text} :xalign 0 :wrap true :wrap-mode "wordchar" :hexpand true)))))(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-todo" (label :text "목록 편집"))))
+ (box :class {"card extra-neutral glass-uw-todo size-" + sizes.todo.mode} :style {"padding: " + sizes.todo.padding + "px;"} :orientation "v" :space-evenly false :vexpand true :spacing {sizes.todo.gap}
+  (box :space-evenly false
+   (label :class "extra-heading" :text "todomate" :xalign 0 :hexpand true)
+   (button :class "subtle-action" :onclick "./scripts/manager-launch.py app todomate" :tooltip "todomate 연결 화면" (label :text "열기 ↗")))
+  (label :visible {sizes.todo.height >= 280} :class "extra-note-title" :style {"font-size: " + sizes.todo.title + "px;"} :text "오늘의 할 일" :xalign 0)
+  (scroll :class "content-scroll" :hscroll true :vscroll true :hexpand true :vexpand true
+   (box :orientation "v" :space-evenly false :spacing 2
+    (label :visible {!(extra.todomate_ready ?: false) || (extra.todomate_tasks ?: "[]") == "[]"} :class "extra-detail" :text {extra.todomate_message ?: "todomate를 연결하세요."} :xalign 0 :yalign 0 :wrap true :wrap-mode "wordchar" :limit-width 1 :hexpand true)
+    (for task in {extra.todomate_tasks ?: "[]"}
+     (button :class {"extra-task " + (task.done ? "done" : "")} :active {!task.pending && extra.todomate_status == "ready"}
+      :onclick {"./scripts/todomate.py toggle " + task.id + " " + (task.done ? "true" : "false") + " " + extra.todomate_date}
+      (box :space-evenly false :spacing 9
+       (label :class "task-check" :text {task.pending ? "◌" : task.done ? "●" : "○"} :valign "start")
+       (label :text {task.text} :style {"font-size: " + sizes.todo.body + "px;"} :xalign 0 :wrap true :wrap-mode "wordchar" :limit-width 1 :hexpand true))))))
+  (label :visible {(extra.todomate_ready ?: false) && sizes.todo.height >= 160} :class "extra-detail" :text {extra.todomate_count ?: ""} :xalign 0)))
 (defwindow uw-todo
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -78,7 +86,7 @@
  (movable-card :theme appearance :name "uw-todo" (todo-card)))
 (defwidget focus-card []
  (extra-card :kind "focus" :title "집중 타이머" :tone "yellow"
-  (label :class "extra-value" :truncate true :style {sizes["focus"].height < 160 || sizes["focus"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {extra.focus_time ?: "25:00"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.focus_detail ?: "집중"} :xalign 0 :wrap true :wrap-mode "wordchar")(progress :value {extra.focus_percent ?: 0})
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["focus"].hero + "px;"} :text {extra.focus_time ?: "25:00"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.focus_detail ?: "집중"} :xalign 0 :wrap true :wrap-mode "wordchar")(progress :value {extra.focus_percent ?: 0})
  (box :space-evenly true :spacing 8 :orientation {sizes.focus.width < 240 ? "v" : "h"}
    (button :class "extra-button" :onclick "./scripts/library_data.py action focus-toggle" (label :text {extra.focus_button ?: "시작"}))
    (button :class "extra-button" :onclick "./scripts/library_data.py action focus-reset" (label :text "초기화")))))
@@ -89,7 +97,7 @@
  (movable-card :theme appearance :name "uw-focus" (focus-card)))
 (defwidget cpu-card []
  (extra-card :kind "cpu" :title "CPU 사용량" :tone "green"
-  (label :class "extra-value" :truncate true :style {sizes["cpu"].height < 160 || sizes["cpu"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {(info.cpu ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {info.cpu ?: 0})(label :class "extra-detail" :text "프로세서 · 3초마다 갱신" :xalign 0 :wrap true :wrap-mode "wordchar")))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["cpu"].hero + "px;"} :text {(info.cpu ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {info.cpu ?: 0})(label :class "extra-detail" :text "프로세서 · 3초마다 갱신" :xalign 0 :wrap true :wrap-mode "wordchar")))
 (defwindow uw-cpu
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -97,7 +105,7 @@
  (movable-card :theme appearance :name "uw-cpu" (cpu-card)))
 (defwidget memory-card []
  (extra-card :kind "memory" :title "메모리" :tone "green"
-  (label :class "extra-value" :truncate true :style {sizes["memory"].height < 160 || sizes["memory"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {(info.memory ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {info.memory ?: 0})(label :class "extra-detail" :text {info.memory_text ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["memory"].hero + "px;"} :text {(info.memory ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {info.memory ?: 0})(label :class "extra-detail" :text {info.memory_text ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
 (defwindow uw-memory
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -105,7 +113,7 @@
  (movable-card :theme appearance :name "uw-memory" (memory-card)))
 (defwidget disk-card []
  (extra-card :kind "disk" :title "저장공간" :tone "green"
-  (label :class "extra-value" :truncate true :style {sizes["disk"].height < 160 || sizes["disk"].width < 264 ? "font-size: 26px;" : "font-size: 40px;"} :text {(info.disk ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {info.disk ?: 0})(label :class "extra-detail" :text {info.disk_text ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["disk"].hero + "px;"} :text {(info.disk ?: 0) + "%"} :xalign 0 :vexpand true)(progress :value {info.disk ?: 0})(label :class "extra-detail" :text {info.disk_text ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
 (defwindow uw-disk
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -114,9 +122,9 @@
 (defwidget network-card []
  (extra-card :kind "network" :title "네트워크 속도" :tone "green"
   (label :class "extra-detail" :text "↓ 다운로드" :xalign 0)
- (label :class "extra-network" :text {extra.download ?: "측정 중…"} :xalign 0 :vexpand true)
+ (label :class "extra-network" :style {"font-size: " + sizes.network.title * 1.6 + "px;"} :text {extra.download ?: "측정 중…"} :xalign 0 :vexpand true)
  (label :class "extra-detail" :text "↑ 업로드" :xalign 0)
- (label :class "extra-network" :text {extra.upload ?: "측정 중…"} :xalign 0 :vexpand true)))
+ (label :class "extra-network" :style {"font-size: " + sizes.network.title * 1.6 + "px;"} :text {extra.upload ?: "측정 중…"} :xalign 0 :vexpand true)))
 (defwindow uw-network
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -124,7 +132,7 @@
  (movable-card :theme appearance :name "uw-network" (network-card)))
 (defwidget uptime-card []
  (extra-card :kind "uptime" :title "PC 가동 시간" :tone "green"
-  (label :class "extra-value" :truncate true :style {sizes["uptime"].height < 160 ? "font-size: 20px;" : "font-size: 26px;"} :text {extra.uptime ?: "—"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.uptime_detail ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
+  (label :class "extra-value" :truncate true :style {"font-size: " + sizes["uptime"].hero + "px;"} :text {extra.uptime ?: "—"} :xalign 0 :vexpand true)(label :class "extra-detail" :text {extra.uptime_detail ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))
 (defwindow uw-uptime
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")

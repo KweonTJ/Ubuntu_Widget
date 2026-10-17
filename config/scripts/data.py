@@ -165,7 +165,7 @@ def snapshot(previous):
     used = mem['MemTotal'] - mem['MemAvailable']
     disk = shutil.disk_usage(Path.home())
     _, music = media()
-    return current, {
+    result = {
         "time": now.strftime("%H:%M"), "date": now.strftime("%a, %b %d"),
         "zone": "Local time", "zone_detail": now.tzname() or "System timezone",
         "calendar": calendar_data(now),
@@ -173,6 +173,14 @@ def snapshot(previous):
         "memory_text": f"{used / 1048576:.1f} / {mem['MemTotal'] / 1048576:.0f} GB",
         "disk": round(disk.used / disk.total * 100), "disk_text": f"{disk.free / 1073741824:.0f} GB 여유",
         "battery": battery(), "bluetooth": bluetooth_batteries(), "sound": sound(), "music": music}
+    battery_info=result['battery']
+    devices=[{'name':'이 PC','value':battery_info.get('value',0),'known':battery_info.get('available',False),
+              'label':battery_info.get('label','—'),'icon':'laptop','detail':battery_info.get('detail',''),
+              'low':battery_info.get('available',False) and battery_info.get('value',0)<=20,'primary':True}]
+    devices += [{**device,'primary':False,'detail':'연결됨' if device['known'] else '잔량 정보 없음'} for device in result['bluetooth']['devices']]
+    result.update(battery_devices=devices,battery_rows2=[devices[i:i+2] for i in range(0,len(devices),2)],
+                  battery_rows3=[devices[i:i+3] for i in range(0,len(devices),3)])
+    return current,result
 
 
 def action(name):

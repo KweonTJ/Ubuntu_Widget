@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 STATE = {'positions.json', 'hidden-widgets.json', 'enabled-widgets.json',
          'widget-settings.json', 'connections.json', 'web-widgets.json',
          'web-windows.yuck', 'glass-settings.json', 'theme-mode',
-         'glass-compositor-state.json'}
+         'glass-compositor-state.json', 'linked-apps.json', 'widget-stacks.json'}
 MARKER = '.ubuntu-widget-package'
 
 

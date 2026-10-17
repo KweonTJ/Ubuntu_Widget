@@ -4,7 +4,7 @@
 
 [![Package checks](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml)
 
-A macOS-inspired desktop widget library for **Ubuntu GNOME on Xorg**. Browse **34 built-in choices**, add individual widgets, and place them on a 16 px grid. Cards share rounded corners, responsive layouts, light/dark themes, and optional glass effects.
+A macOS-inspired desktop widget library for **Ubuntu GNOME on Xorg**. Browse **35 built-in choices**, add individual widgets, and place them on a 16 px grid. Cards share rounded corners, responsive layouts, light/dark themes, and optional glass effects.
 
 This is an independent community project, not an Apple product. The current on-screen interface is primarily Korean; the setup labels used below include their original text. A Korean README is available through the language link above; additional documentation is in English.
 
@@ -34,12 +34,14 @@ On supported Ubuntu installations, choose **Ubuntu on Xorg** from the login-scre
 
 ## Install
 
+Widget Library is a native desktop app. After installation, open **Widget Library** from the application menu, then right-click its dock icon and choose **Add to Favorites**. The dock icon opens the library to add and manage widgets; your placed widgets remain on the desktop.
+
 ### Recommended: install the Debian package
 
-Download `ubuntu-widget_0.1.1-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
+Download `ubuntu-widget_2.0.0-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
 
 ```bash
-sudo apt install ./ubuntu-widget_0.1.1-1_amd64.deb
+sudo apt install ./ubuntu-widget_2.0.0-1_amd64.deb
 /usr/bin/ubuntu-widget
 ```
 
@@ -49,7 +51,15 @@ The first launch creates your own configuration with an empty desktop. Package i
 
 Release assets also include `SHA256SUMS` and the matching `*-source.tar.xz` archive containing patched Eww and vendored Cargo sources. See [packaging and rebuilding](docs/PACKAGING.md).
 
-### Build and install from source
+### Widget stacks
+
+- Add two or more widgets and give them the same width and height.
+- Select one in the library, choose **스택 만들기…**, then select the other matching widgets.
+- Click the small page counter at the bottom of the card, or scroll over it, to switch.
+- Move or resize the visible card; the next card inherits that position and size. Reopening keeps the active member.
+- Choose **스택 해제** in the library or context menu to restore the individual widgets to their previous positions.
+
+## Build and install from source
 
 Runtime requirements: Python 3.10+, GTK 3, a full GNOME/Xorg session, and a working user systemd/D-Bus session.
 
@@ -59,7 +69,7 @@ Install runtime and build dependencies through Ubuntu's package manager:
 sudo apt update
 sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
   python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
-  gir1.2-gtk-3.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
+  gir1.2-gtk-3.0 gir1.2-webkit2-4.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
   gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
   pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
 ```
@@ -84,13 +94,22 @@ cd Ubuntu_Widget
 
 Open **Widget Library / 위젯 보관함** from the application menu. A fresh installation starts with an empty desktop; select the widgets you want and click **바탕화면에 추가** (Add to desktop). Add-ons that require an account display a setup prompt until you connect your own account.
 
+## Version 2.0
+
+- A quieter native library with a sidebar, search and a dedicated settings pane; the iPhone connection guide has been removed.
+- Consistent light/dark materials and icons, live size-dependent typography, compact summaries and expanded detail layouts.
+- Obsidian note previews, native todomate tasks, KDE Connect file sharing, whole-card dragging and resizing from either edge.
+- Existing locally stored notes/tasks remain in your settings after upgrading, although the Note/To-do cards now connect to the named apps.
+
+See [design rationale](docs/DESIGN.md) and [validation](docs/VALIDATION.md).
+
 ## Included widgets
 
 | Category | Choices |
 | --- | --- |
 | Time and date (9) | Digital clock, calendar, analog clock, upcoming events, world clocks, today's date, day progress, year progress, countdown |
 | Notes and focus (3) | Note, to-do list, focus timer |
-| System (8) | System overview, battery, screen time, CPU, memory, storage, network speed, uptime |
+| System (9) | System overview, battery, screen time, CPU, memory, storage, network speed, uptime, KDE Connect file sharing |
 | Media (3) | Music, volume, podcasts |
 | Weather and home (2) | Weather, Home Assistant |
 | Stocks (1) | Toss Securities watchlist and market indices |
@@ -112,6 +131,14 @@ Website choices are launchers: they open the website, rather than embedding a si
 ## Widgets that need your settings
 
 Use **내용·시간 설정** (Content/time settings) or **연결·설정** (Connection/settings) in the selected widget's detail panel.
+
+### KDE Connect — file sharing
+
+- Install KDE Connect on the PC (`sudo apt install kdeconnect`) and the other device, then pair them in KDE Connect. This is an optional dependency.
+- Keep both devices reachable and enable the **Share and receive** plugin.
+- Add **KDE Connect · 파일 공유** from the library. Click **파일 보내기…**, choose the receiving device, select files (or drop them into the sending window), and click **보내기**.
+- Multiple files are supported; compress folders before selecting them. Files are sent only when you click Send. Transfer completion and received files are managed by KDE Connect.
+- No device IDs, selected file paths, or transfer history are saved by the widget.
 
 ### Stocks — Toss Securities
 
@@ -147,8 +174,8 @@ Use **내용·시간 설정** (Content/time settings) or **연결·설정** (Con
 
 ### Notes, tasks, dates and focus
 
-- **Note / 메모:** enter a title and up to 2,000 characters. Useful for a short daily reference.
-- **To-do / 할 일:** enter one task per line, up to 12 tasks. Click a task on the desktop to check it off.
+- **Obsidian notes:** choose a Markdown file from an Obsidian-registered vault using **노트 선택…**. The card reads it locally and follows edits; **Obsidian에서 열기** opens the same note through the official Obsidian URI. The widget never writes to the note.
+- **todomate tasks:** choose **todomate 연결…** and sign in to the official website once. The native card shows today's own tasks and lets you check/uncheck them. One local WebKit session supplies the page's authenticated Firebase client; no passwords or tokens are copied to the widget or sent to a relay. This is an **unofficial compatibility adapter**, not a documented todomate API, and may need updates if its web app changes. Active timed tasks are completed in the official app. Chrome and the widget have separate login storage.
 - **Upcoming events / 다가오는 일정:** enter one event per line as `YYYY-MM-DD HH:MM | Event title`, up to 40 entries. The next 12 are shown. These are local events, without Google/Apple account sync or event alarms.
 - **Countdown / 디데이:** choose a title and date in `YYYY-MM-DD` format.
 - **Focus / 집중 타이머:** choose 1–180 minutes; start, pause or reset from the widget. Completion notifications require the timer's data listener to be running.
@@ -181,6 +208,8 @@ Use **내용·시간 설정** (Content/time settings) or **연결·설정** (Con
 - On other GNOME/extension versions, blur is unverified; the translucent card styling can still work. Unsupported schema versions are skipped.
 - While real blur is active, the integration temporarily changes the extension's application-blur, opacity and redraw-workaround settings; it restores saved values when the last effect is disabled, unless another application changed them. Turn glass off before uninstalling.
 - No macOS wallpaper, theme, font, icon pack or Apple software is included.
+
+The todomate profile is stored under `.web-profile/todomate/` inside your user configuration. It contains sensitive login data: never commit, export or share that directory. Obsidian note paths live in `linked-apps.json`; no note content is copied into the package. On Ubuntu 24.04 source installations, install `gir1.2-webkit2-4.1` instead of the 22.04 WebKit package shown above.
 
 ## Personal data and storage
 
@@ -220,19 +249,21 @@ Uninstall keeps personal configuration and keyring entries. Disconnect accounts 
 
 If the app does not launch, check the cache directory's `gallery.log` and `daemon.log`. Verify Xorg, the patched engine, a running user systemd/D-Bus session, and an unlocked GNOME Keyring. If controls stop responding, restart the engine; its layout listener also repairs desktop-icon stacking automatically.
 
-The Apple iPhone Continuity widget system is **not available on Ubuntu**. Website shortcuts are provided for services with a web interface; they do not mirror iPhone apps.
+No iPhone connection controls or Continuity setup are included. Native Apple Continuity is not implemented.
 
 ## Open-source components
 
 | Component | Role | License / source |
 | --- | --- | --- |
 | [Eww](https://github.com/elkowar/eww) | Widget renderer; pinned source plus our native movement/resize patch | MIT; [included notice](LICENSES/Eww-MIT.txt) |
+| [WebKitGTK](https://webkitgtk.org/) | Local todomate login and task bridge | System LGPL/BSD dependency; not bundled |
 | [GTK 3](https://www.gtk.org/), GLib/GIO and GDK | Native library, dialogs, themes and desktop integration | LGPL; system dependencies |
 | [PyGObject](https://pygobject.gnome.org/) | Python bindings for GTK/GIO/libsecret | LGPL-2.1-or-later |
 | [Cairo / Pycairo](https://pycairo.readthedocs.io/) | Widget-library preview drawing | Upstream LGPL/MPL licenses |
 | [D-Bus / dbus-python](https://www.freedesktop.org/wiki/Software/dbus/) | Session services, media, battery and keyring communication | Upstream D-Bus and dbus-python licenses |
 | [libsecret](https://gnome.pages.gitlab.gnome.org/libsecret/) / [GNOME Keyring](https://gitlab.gnome.org/GNOME/gnome-keyring) | Secret storage | Upstream LGPL/GPL licenses |
 | [Blur my Shell](https://github.com/aunetx/blur-my-shell) | Optional real background blur | GPL-3.0-or-later; not bundled |
+| [KDE Connect](https://kdeconnect.kde.org/) | Optional file sharing with paired devices | GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL and per-file licenses; installed separately |
 | [BlueZ](https://www.bluez.org/) / [UPower](https://upower.freedesktop.org/) | Bluetooth and system battery data | Upstream GPL/LGPL licenses; system services |
 | [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/), or [PipeWire](https://pipewire.org/) compatibility | Volume controls through `pactl` | System services, not bundled |
 | [Python](https://www.python.org/), [X.Org](https://www.x.org/), [systemd](https://systemd.io/) | Runtime, X11 control and user services | Respective upstream licenses |

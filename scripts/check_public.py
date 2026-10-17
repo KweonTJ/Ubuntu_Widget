@@ -18,12 +18,15 @@ check(read('glass-settings.json')=={'enabled':False,'overrides':{}},'Glass must 
 expected={'stocks':{'connected':False,'symbols':[],'indices':[]},'weather':{'connected':False,'city':'','latitude':0,'longitude':0},'home':{'connected':False,'url':'','entities':[]},'screentime':{'enabled':False}}
 check(read('connections.json')==expected,'Provider settings must be blank and disconnected.')
 check(read('widget-settings.json')=={'note':{'title':'Note','text':''},'todo':{'tasks':[]},'agenda':{'events':[]}},'Notes/tasks/events must be blank.')
+check(read('linked-apps.json')=={'obsidian':{'note':''}},'Linked app defaults must not contain a personal note path.')
+check(read('widget-stacks.json')=={'version':1,'groups':[]},'Stack defaults must not contain personal placements.')
 files=subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z'],cwd=ROOT).decode().split('\0')
 patterns=[r'/(?:home|Users)/[^\s/"\']+/',r'gh[pousr]_[A-Za-z0-9]{25,}',r'github_pat_[A-Za-z0-9_]{25,}',r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',r'tsck_live_[A-Za-z0-9_-]{24,}']
 for name in filter(None,files):
     path=ROOT/name
     if not path.is_file():continue
     check(not path.is_symlink(),'Unexpected symlink: '+name)
+    check('.web-profile' not in path.parts,'Private browser profile must not be exported: '+name)
     check(path.suffix not in {'.mp4','.webm','.xwd','.pyc','.log','.key','.pem'} and not name.endswith('.tar.gz'),'Unexpected private/binary export: '+name)
     if path.suffix=='.png':continue
     try:text=path.read_text()

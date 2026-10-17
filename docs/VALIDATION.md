@@ -1,5 +1,21 @@
 # Validation scope
 
+## Version 2.0 (2026-10-18)
+
+- Ubuntu 22.04.5 LTS / GNOME 42 / Xorg / amd64 remains the desktop-verified environment.
+- Unit checks cover providers, per-user installation, Obsidian reads/vault boundaries, responsive metrics, and KDE Connect filtering/multi-file requests.
+- Xvfb sessions rendered the native catalogue in light/dark modes, representative compact/expanded cards, and both library themes.
+- Physical pointer tests verified body dragging, both resize edges, ordinary controls, saved positions, and a local embedded WebKit page's checkbox. No account data was used by these tests.
+- The desktop update preserves provider settings, personal content, layout and the existing todomate login profile. Obsidian connected to a registered local vault.
+- A real local todomate session loaded today's task list. A temporary connector test task was checked and unchecked through the same command path used by the native widget, then removed. No existing personal task was modified. This validates this account/session, not every possible account or future provider schema.
+- The page-adapter contract test covers ownership/date checks, stale completion conflicts, active timers and logout. Stale/previous-day local snapshots are rejected.
+- Stack checks cover equal-size selection, page switching, common movement/size, restart, split, removal and failed-switch rollback. `make test-stacks` uses physical mouse clicks, wheel events, body dragging and edge resizing on Xvfb.
+- `make test` passes 27 checks and skips the two opt-in GUI tests; `make test-native`, `make test-webview` and the stack GUI test pass separately. All 27 native cards render in light/dark modes without engine errors.
+- The 2.0 Debian package installed, initialized two users, rendered all 27 native cards and the GTK library, preserved content through a template update, and purged its program files while retaining user data in a clean Ubuntu 22.04 container.
+- Ubuntu 24.04 remains experimental; no new full-desktop support claim is made for other releases or Wayland.
+
+## Earlier validation
+
 Validated on 2026-10-17 using Ubuntu 22.04.5 LTS, GNOME 42 and a full Xorg session on x86-64.
 
 - Built the pinned Eww source plus the native-control patch using stable Rust 1.99.0.

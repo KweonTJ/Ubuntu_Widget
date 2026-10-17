@@ -8,6 +8,7 @@ from pathlib import Path
 import gi
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk, GLib
+from responsive import metrics
 
 X = C.CDLL(ctypes.util.find_library('X11'))
 P, U, I = C.c_void_p, C.c_ulong, C.c_int
@@ -26,6 +27,7 @@ bind('XMoveWindow', I, [P,U,I,I])
 bind('XFlush', I, [P])
 bind('XSendEvent', I, [P,U,I,C.c_long,P])
 bind('XQueryPointer', I, [P,U,C.POINTER(U),C.POINTER(U),C.POINTER(I),C.POINTER(I),C.POINTER(I),C.POINTER(I),C.POINTER(C.c_uint)])
+bind('XQueryTree', I, [P,U,C.POINTER(U),C.POINTER(U),C.POINTER(C.POINTER(U)),C.POINTER(C.c_uint)])
 error_type = C.CFUNCTYPE(I, P, P)
 ignore_error = error_type(lambda display, event: 0)
 bind('XSetErrorHandler', P, [error_type])(ignore_error)
@@ -117,15 +119,22 @@ names = ['clock','calendar','system','music','battery','sound'] + [w['kind'] for
 def emit():
     global last
     scale = max(1, Gdk.get_default_root_window().get_scale_factor())
-    result = {name:{'width':320,'height':224} for name in names}
+    result = {name:metrics(320,224) for name in names}
     alive={}
-    for window in prop(root,'_NET_CLIENT_LIST'):
+    windows=prop(root,'_NET_CLIENT_LIST')
+    if not windows:
+        # A bare X11 server (including UI tests) has no window manager to publish EWMH.
+        tree_root,parent,children,count=U(),U(),C.POINTER(U)(),C.c_uint()
+        if X.XQueryTree(D,root,C.byref(tree_root),C.byref(parent),C.byref(children),C.byref(count)):
+            windows=list(children[:count.value])
+            if children:X.XFree(children)
+    for window in windows:
         title=prop(window,'_NET_WM_NAME')
         if not isinstance(title,str) or not title.startswith('Eww - uw-'): continue
         name=title.removeprefix('Eww - uw-')
         r,x,y,w,h,b,depth=U(),I(),I(),C.c_uint(),C.c_uint(),C.c_uint(),C.c_uint()
         if X.XGetGeometry(D,window,C.byref(r),C.byref(x),C.byref(y),C.byref(w),C.byref(h),C.byref(b),C.byref(depth)):
-            result[name]={'width':w.value//scale,'height':h.value//scale}
+            result[name]=metrics(w.value//scale,h.value//scale)
             alive[window]=(name,w.value//scale,h.value//scale)
     keep_widgets_above_desktop(alive)
     settle_placements(alive,scale)

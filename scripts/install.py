@@ -23,7 +23,7 @@ def install(binary,autostart=False):
         raise ValueError(f'{config} already contains an unrecognized installation. Move it aside before installing.')
     if not binary.is_file() or not os.access(binary,os.X_OK):raise ValueError('Build the patched Eww first, or use --eww /path/to/patched/eww.')
     content=binary.read_bytes()
-    if b'eww-native-draggable' not in content or b'resize-min-width' not in content:
+    if b'eww-native-draggable' not in content or b'resize-min-width' not in content or b'EWW_SOCKET_ID' not in content:
         raise ValueError('This Eww does not contain the required native move/resize extension. Use scripts/build-eww.sh.')
     config.mkdir(parents=True,exist_ok=True,mode=0o700);lib.mkdir(parents=True,exist_ok=True)
     initialize(config, force=True)
@@ -41,11 +41,13 @@ Version=1.0
 Type=Application
 Name=Widget Library
 Name[ko]=위젯 보관함
-Comment=Browse and customize 34 desktop widgets
-Comment[ko]=34가지 위젯과 웹사이트 바로가기를 추가합니다
+Comment=Browse and customize 35 desktop widgets
+Comment[ko]=35가지 위젯과 웹사이트 바로가기를 추가합니다
 Exec={command} edit
 Icon=ubuntu-widget
 Terminal=false
+StartupNotify=true
+StartupWMClass=Ubuntu-widget
 Categories=Utility;
 Keywords=widget;clock;calendar;weather;
 Actions=Toggle;Restore;
@@ -58,7 +60,9 @@ Exec={command} toggle
 Name=Restore removed widgets
 Exec={command} restore
 '''.format(command=desktop_quote(launcher))
-    (appdir/'ubuntu-widget.desktop').write_text(desktop)
+    (appdir/'local.ubuntu.WidgetLibrary.desktop').write_text(desktop)
+    # Retire the previous menu entry after installing its replacement.
+    (appdir/'ubuntu-widget.desktop').unlink(missing_ok=True)
     if autostart:
         startup=config.parent/'autostart';startup.mkdir(parents=True,exist_ok=True)
         (startup/'ubuntu-widget.desktop').write_text('''[Desktop Entry]

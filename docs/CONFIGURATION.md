@@ -7,6 +7,9 @@ The default configuration directory is `~/.config/ubuntu-widget`, or `$XDG_CONFI
 | File | Purpose |
 | --- | --- |
 | `widget-settings.json` | Your note, tasks, countdown, focus timer, local events and optional world-clock list |
+| `linked-apps.json` | Selected Obsidian note path; local legacy notes/tasks remain preserved in `widget-settings.json` |
+| `widget-stacks.json` | Stack membership, active member and original placements |
+| `.web-profile/todomate/` | Private todomate web login/session data; never publish or share this directory |
 | `web-widgets.json` | Your named website URLs |
 | `connections.json` | Non-secret settings: chosen symbols, coordinates, Home Assistant address/entity IDs, opt-in flags |
 | `positions.json` | Automatically saved per-widget position and size |

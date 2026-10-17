@@ -238,6 +238,8 @@ def weather_snapshot(cfg,fetch=request):
            'detail':weather_name(daily['weather_code'][i])} for i,day in enumerate(daily['time'])]
     hours=[{'name':t[-5:],'value':temperature(hourly['temperature_2m'][i]),'detail':weather_name(hourly['weather_code'][i])}
            for i,t in enumerate(hourly['time']) if t>=current['time']][:6]
+    for index,row in enumerate(hours):row['index']=index
+    for index,row in enumerate(week):row['index']=index
     air='대기질 정보 없음'
     try:
         a=fetch('https://air-quality-api.open-meteo.com/v1/air-quality?'+urllib.parse.urlencode({**loc,'current':'us_aqi,pm2_5'}))['current']

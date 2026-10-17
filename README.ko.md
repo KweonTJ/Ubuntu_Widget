@@ -4,7 +4,7 @@
 
 [![패키지 검사](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml)
 
-**Ubuntu GNOME의 Xorg 환경**에서 사용하는 macOS 스타일의 바탕화면 위젯 보관함입니다. **기본 제공 항목 34개** 중에서 원하는 위젯을 골라 개별적으로 추가하고, 16 px 그리드에 맞춰 배치할 수 있습니다. 위젯은 둥근 모서리, 반응형 레이아웃, 라이트·다크 테마와 선택 가능한 글래스 효과를 공통으로 제공합니다.
+**Ubuntu GNOME의 Xorg 환경**에서 사용하는 macOS 스타일의 바탕화면 위젯 보관함입니다. **기본 제공 항목 35개** 중에서 원하는 위젯을 골라 개별적으로 추가하고, 16 px 그리드에 맞춰 배치할 수 있습니다. 위젯은 둥근 모서리, 반응형 레이아웃, 라이트·다크 테마와 선택 가능한 글래스 효과를 공통으로 제공합니다.
 
 Apple 제품이 아닌 독립적인 커뮤니티 프로젝트입니다. 현재 앱 화면은 주로 한국어로 제공됩니다. 영어 README는 위 언어 링크에서 볼 수 있으며, 추가 문서는 영어로 제공됩니다.
 
@@ -34,12 +34,14 @@ echo "$XDG_SESSION_TYPE"  # x11이 출력되어야 합니다
 
 ## 설치
 
+위젯 보관함은 독에 고정할 수 있는 데스크톱 앱입니다. 설치 후 앱 메뉴에서 **위젯 보관함**을 열고, 독의 앱 아이콘을 우클릭해 **즐겨찾기에 추가**하세요. 독 아이콘으로 보관함을 열어 위젯을 추가·관리하며, 배치한 위젯은 바탕화면에 유지됩니다.
+
 ### 권장: Debian 패키지로 설치
 
-[GitHub 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)에서 `ubuntu-widget_0.1.1-1_amd64.deb`를 내려받으세요. 다운로드한 폴더에서 터미널을 열고 실행하세요.
+[GitHub 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)에서 `ubuntu-widget_2.0.0-1_amd64.deb`를 내려받으세요. 다운로드한 폴더에서 터미널을 열고 실행하세요.
 
 ```bash
-sudo apt install ./ubuntu-widget_0.1.1-1_amd64.deb
+sudo apt install ./ubuntu-widget_2.0.0-1_amd64.deb
 /usr/bin/ubuntu-widget
 ```
 
@@ -59,7 +61,7 @@ Ubuntu 패키지 관리자로 실행 및 빌드 의존성을 설치하세요.
 sudo apt update
 sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
   python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
-  gir1.2-gtk-3.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
+  gir1.2-gtk-3.0 gir1.2-webkit2-4.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
   gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
   pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
 ```
@@ -84,13 +86,22 @@ cd Ubuntu_Widget
 
 앱 메뉴에서 **Widget Library / 위젯 보관함**을 실행하세요. 처음 설치하면 바탕화면에 위젯이 없는 상태로 시작합니다. 원하는 위젯을 선택하고 **바탕화면에 추가**를 누르세요. 계정이 필요한 위젯은 본인의 계정을 연결하기 전까지 설정 안내를 표시합니다.
 
+## 버전 2.0
+
+- 사이드바·검색·상세 설정 중심의 보관함으로 정리하고 아이폰 연결 안내를 제거했습니다.
+- 라이트·다크 배경과 아이콘을 통일하고 실제 크기에 따라 글자·링·달력 칸·정보 밀도가 달라집니다.
+- Obsidian 노트, todomate 오늘 할 일, KDE Connect 파일 공유를 지원합니다. 위젯 본문 이동과 양쪽 가장자리 크기 조절도 포함합니다.
+- 업데이트 후 기존 로컬 메모·할 일 데이터는 설정 파일에 남습니다. 해당 카드는 이제 각 앱에 연결됩니다.
+
+[디자인 근거](docs/DESIGN.md)와 [검증 기록](docs/VALIDATION.md)을 참고하세요.
+
 ## 제공 위젯
 
 | 분류 | 항목 |
 | --- | --- |
 | 시간과 날짜(9개) | 디지털 시계, 달력, 아날로그 시계, 다가오는 일정, 세계 시계, 오늘 날짜, 하루 진행률, 연간 진행률, 디데이 |
-| 메모와 집중(3개) | 메모, 할 일, 집중 타이머 |
-| 시스템(8개) | 시스템 요약, 배터리, 스크린 타임, CPU, 메모리, 저장 공간, 네트워크 속도, 가동 시간 |
+| 메모와 집중(3개) | Obsidian 노트, todomate 할 일, 집중 타이머 |
+| 시스템(9개) | 시스템 요약, 배터리, 스크린 타임, CPU, 메모리, 저장 공간, 네트워크 속도, 가동 시간, KDE Connect 파일 공유 |
 | 미디어(3개) | 음악, 음량, 팟캐스트 |
 | 날씨와 홈(2개) | 날씨, Home Assistant |
 | 주식(1개) | 토스증권 관심 종목과 시장 지수 |
@@ -112,6 +123,14 @@ cd Ubuntu_Widget
 ## 사용자 설정이 필요한 위젯
 
 보관함에서 위젯을 선택한 뒤 상세 화면의 **내용·시간 설정** 또는 **연결·설정**을 사용하세요.
+
+### KDE Connect — 파일 공유
+
+- PC에 KDE Connect(`sudo apt install kdeconnect`)와 상대 기기의 KDE Connect를 설치한 뒤 서로 연결하세요. 선택 의존성이며 자동 설치하지 않습니다.
+- 두 기기를 연결 가능한 상태로 두고 KDE Connect의 **공유 및 수신** 플러그인을 켜세요.
+- 보관함에서 **KDE Connect · 파일 공유**를 추가하세요. 위젯의 **파일 보내기…**를 누르고, 받을 기기와 파일을 고른 뒤 **보내기**를 누르세요. 보내기 창으로 파일을 끌어 놓아도 됩니다.
+- 여러 파일을 한 번에 선택할 수 있습니다. 폴더는 먼저 압축하세요. 보내기를 눌렀을 때만 전송을 요청하며 완료 알림과 받은 파일은 KDE Connect에서 관리합니다.
+- 위젯은 기기 ID, 선택한 파일 경로, 전송 기록을 저장하지 않습니다.
 
 ### 주식 — 토스증권
 
@@ -147,8 +166,8 @@ cd Ubuntu_Widget
 
 ### 메모·할 일·날짜·집중
 
-- **메모:** 제목과 최대 2,000자의 내용을 입력하세요. 자주 확인하는 짧은 메모에 적합합니다.
-- **할 일:** 한 줄에 하나씩 최대 12개를 입력하세요. 바탕화면에서 항목을 클릭하면 완료 여부를 바꿀 수 있습니다.
+- **Obsidian 노트:** **노트 선택…**에서 Obsidian에 등록한 보관함의 Markdown 파일을 고르세요. 내용을 로컬에서 읽고 수정 사항을 반영합니다. **Obsidian에서 열기**는 공식 Obsidian URI로 같은 노트를 엽니다. 위젯은 원본 노트를 수정하지 않습니다.
+- **todomate 할 일:** **todomate 연결…**에서 공식 웹사이트에 처음 한 번 로그인하세요. 위젯에는 오늘 내 할 일을 표시하고 완료·취소를 체크할 수 있습니다. 공식 페이지가 사용 중인 Firebase 클라이언트를 같은 로컬 WebKit 세션 안에서 연결하며 비밀번호·토큰을 위젯으로 복사하거나 중계 서버로 보내지 않습니다. 문서화된 공개 API가 아닌 **비공식 호환 어댑터**이므로 웹 앱 변경 시 수정이 필요할 수 있습니다. 타이머가 실행 중인 항목은 공식 앱에서 완료해 주세요. Chrome과 위젯의 로그인 저장소는 별도입니다.
 - **다가오는 일정:** `YYYY-MM-DD HH:MM | 일정 제목` 형식으로 한 줄에 하나씩 최대 40개를 입력하세요. 다가오는 일정 12개를 표시합니다. 로컬 일정이며 Google·Apple 계정 동기화나 일정 알림은 제공하지 않습니다.
 - **디데이:** 제목과 `YYYY-MM-DD` 형식의 날짜를 설정하세요.
 - **집중 타이머:** 1~180분을 설정하고 위젯에서 시작·일시 정지·초기화하세요. 완료 알림을 받으려면 타이머의 데이터 수신 프로세스가 실행 중이어야 합니다.
@@ -181,6 +200,16 @@ cd Ubuntu_Widget
 - 다른 GNOME·확장 버전의 블러 동작은 검증하지 않았습니다. 반투명 카드 스타일은 계속 사용할 수 있으며, 지원하지 않는 설정 스키마 버전은 건너뜁니다.
 - 실제 블러가 켜져 있는 동안 확장의 앱 블러, 불투명도, 다시 그리기 우회 설정을 임시 변경합니다. 마지막 글래스 효과를 끄면 다른 앱이 해당 값을 변경하지 않은 경우 저장된 값으로 복원합니다. 삭제 전에 글래스 효과를 꺼주세요.
 - macOS 배경화면, 테마, 글꼴, 아이콘 팩 또는 Apple 소프트웨어는 포함하지 않습니다.
+
+todomate 로그인 데이터는 사용자 위젯 설정의 `.web-profile/todomate/`에 저장됩니다. 이 폴더는 커밋·공유·배포하지 마세요. Obsidian 노트 경로는 `linked-apps.json`에 저장하며 노트 내용을 패키지에 복사하지 않습니다. Ubuntu 24.04에서 소스로 설치할 때는 위 22.04용 WebKit 패키지 대신 `gir1.2-webkit2-4.1`을 설치하세요.
+
+## 위젯 스택
+
+- 위젯을 두 개 이상 추가하고 가로·세로 크기를 같게 맞춥니다.
+- 보관함에서 하나를 선택하고 **스택 만들기…**를 눌러 함께 묶을 위젯들을 고릅니다.
+- 위젯 아래 작은 페이지 숫자를 클릭하거나 그 위에서 마우스 휠을 돌려 전환합니다.
+- 보이는 위젯을 이동하거나 크기를 바꾸면 다음 위젯도 같은 위치·크기로 표시됩니다. 다시 실행해도 마지막 위젯을 유지합니다.
+- 보관함이나 오른쪽 클릭 메뉴의 **스택 해제**를 누르면 개별 위젯이 이전 위치로 돌아갑니다.
 
 ## 개인정보와 저장 위치
 
@@ -227,12 +256,14 @@ Apple의 iPhone 연속성 위젯은 **Ubuntu에서 사용할 수 없습니다**.
 | 구성 요소 | 용도 | 라이선스 / 출처 |
 | --- | --- | --- |
 | [Eww](https://github.com/elkowar/eww) | 위젯 렌더링. 특정 커밋의 소스와 자체 이동·크기 조절 패치 사용 | MIT. [포함된 고지문](LICENSES/Eww-MIT.txt) |
+| [WebKitGTK](https://webkitgtk.org/) | todomate 로컬 로그인·할 일 연결 | 시스템 LGPL/BSD 의존성. 패키지에 포함하지 않음 |
 | [GTK 3](https://www.gtk.org/), GLib/GIO, GDK | 네이티브 라이브러리, 대화상자, 테마, 바탕화면 연동 | LGPL. 시스템 의존성 |
 | [PyGObject](https://pygobject.gnome.org/) | GTK/GIO/libsecret의 Python 바인딩 | LGPL-2.1-or-later |
 | [Cairo / Pycairo](https://pycairo.readthedocs.io/) | 위젯 보관함 미리보기 그리기 | 원본 프로젝트의 LGPL/MPL 라이선스 |
 | [D-Bus / dbus-python](https://www.freedesktop.org/wiki/Software/dbus/) | 세션 서비스, 미디어, 배터리, 키링 통신 | 원본 D-Bus 및 dbus-python 라이선스 |
 | [libsecret](https://gnome.pages.gitlab.gnome.org/libsecret/) / [GNOME Keyring](https://gitlab.gnome.org/GNOME/gnome-keyring) | 인증 정보 저장 | 원본 프로젝트의 LGPL/GPL 라이선스 |
 | [Blur my Shell](https://github.com/aunetx/blur-my-shell) | 선택적인 실제 배경 블러 | GPL-3.0-or-later. 패키지에 포함하지 않음 |
+| [KDE Connect](https://kdeconnect.kde.org/) | 연결된 기기로 파일 공유 | GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL 및 파일별 라이선스. 별도 설치 |
 | [BlueZ](https://www.bluez.org/) / [UPower](https://upower.freedesktop.org/) | 블루투스·시스템 배터리 데이터 | 원본 프로젝트의 GPL/LGPL 라이선스. 시스템 서비스 |
 | [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) 또는 [PipeWire](https://pipewire.org/)의 호환 기능 | `pactl`을 통한 음량 조절 | 시스템 서비스. 패키지에 포함하지 않음 |
 | [Python](https://www.python.org/), [X.Org](https://www.x.org/), [systemd](https://systemd.io/) | 실행 환경, X11 제어, 사용자 서비스 | 각 원본 프로젝트의 라이선스 |

@@ -1,4 +1,4 @@
-.PHONY: build source deb test test-deb test-native
+.PHONY: build source deb test test-deb test-native test-webview
 
 build:
 	./scripts/build-eww.sh
@@ -20,3 +20,10 @@ test-deb:
 
 test-native:
 	xvfb-run -a env EWW_NATIVE_TEST_BINARY="$(CURDIR)/build/eww" /usr/bin/python3 -m unittest discover -s tests -p test_native_controls.py -v
+
+test-webview:
+	xvfb-run -a env EWW_WEBVIEW_TEST_BINARY="$(CURDIR)/build/eww" /usr/bin/python3 -m unittest discover -s tests -p test_embedded_webview.py -v
+
+.PHONY: test-stacks
+test-stacks:
+	xvfb-run -a -s '-screen 0 1600x1000x24' /usr/bin/python3 tests/stack-ui-smoke.py

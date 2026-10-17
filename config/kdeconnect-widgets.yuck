@@ -1,0 +1,19 @@
+; KDE Connect is optional. Data is read only while this widget is open.
+(defpoll kdeconnect :interval "5s"
+ :initial '{"available":false,"count":0,"name":"기기를 확인하는 중…","status":"KDE Connect"}'
+ `./scripts/kdeconnect_widget.py snapshot`)
+
+(defwidget kdeconnect-card []
+ (extra-card :kind "kdeconnect" :title "KDE Connect" :tone "green"
+  (label :class "extra-note-title" :text {kdeconnect.name} :xalign 0
+    :truncate true :limit-width 28)
+  (label :class "extra-detail" :text {kdeconnect.status} :xalign 0 :wrap true :wrap-mode "wordchar")
+  (button :class "extra-button" :onclick "./scripts/kdeconnect_widget.py send"
+    :tooltip "기기와 파일을 선택해 보내기"
+    (label :text "파일 보내기…"))))
+
+(defwindow uw-kdeconnect
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-kdeconnect" (kdeconnect-card)))

@@ -5,6 +5,7 @@ import gi
 gi.require_version('Gtk','3.0')
 from gi.repository import Gtk
 import widget_store as store
+import stacks
 widget_id=sys.argv[1];item=store.find(widget_id)
 menu=Gtk.Menu()
 def action(fn):
@@ -20,5 +21,8 @@ if item.get('configurable'):add('내용·시간 설정…',gallery)
 menu.append(Gtk.SeparatorMenuItem())
 for key,name in [('small','작게'),('medium','중간'),('large','크게')]:add(name,lambda k=key:store.show(widget_id,k))
 if item['kind']=='web':add('웹사이트 열기',lambda:store.launch_web(widget_id))
+if stacks.containing(widget_id):
+    add('다음 위젯',lambda:stacks.cycle(widget_id))
+    add('스택 해제',lambda:stacks.dissolve(widget_id))
 menu.append(Gtk.SeparatorMenuItem());add('바탕화면에서 제거',lambda:store.remove(widget_id))
 menu.connect('selection-done',lambda *_:Gtk.main_quit());menu.show_all();menu.popup(None,None,None,None,3,Gtk.get_current_event_time());Gtk.main()

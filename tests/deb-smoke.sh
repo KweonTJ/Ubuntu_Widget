@@ -10,7 +10,7 @@ useradd -m -u 1101 -d /tmp/widget-user-demo demo
 useradd -m -u 1102 -d /tmp/widget-user-other other
 test ! -e /tmp/widget-user-demo/.config/ubuntu-widget
 test ! -e /tmp/widget-user-other/.config/ubuntu-widget
-desktop-file-validate /usr/share/applications/ubuntu-widget.desktop
+desktop-file-validate /usr/share/applications/local.ubuntu.WidgetLibrary.desktop
 if ldd /usr/lib/ubuntu-widget/eww | /usr/bin/grep 'not found'; then exit 1; fi
 /usr/bin/ubuntu-widget --help
 if /usr/bin/ubuntu-widget edit; then echo 'Root launch should be rejected'; exit 1; fi

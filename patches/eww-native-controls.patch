@@ -400,11 +400,128 @@ index 853a8fb..06347e6 100644
  mod error_handling_ctx;
  mod file_database;
  mod geometry;
+diff --git a/crates/eww/src/state/scope_graph.rs b/crates/eww/src/state/scope_graph.rs
+index 3af08fa..97e30c5 100644
+--- a/crates/eww/src/state/scope_graph.rs
++++ b/crates/eww/src/state/scope_graph.rs
+@@ -265,10 +265,13 @@ impl ScopeGraph {
+ 
+     /// Notify a scope that a value has been changed. This triggers the listeners and notifies further subscopes scopes recursively.
+     pub fn notify_value_changed(&mut self, scope_index: ScopeIndex, updated_var: &VarName) -> Result<()> {
++        // Earlier callbacks may rebuild a for-loop and remove queued descendant scopes.
++        if self.graph.scope_at(scope_index).is_none() { return Ok(()); }
+         // Update scopes that reference the changed variable in their attribute expressions.
+         let edges: Vec<(ScopeIndex, internal::ProvidedAttr)> =
+             self.graph.scopes_getting_attr_using(scope_index, updated_var).into_iter().map(|(a, b)| (a, b.clone())).collect();
+         for (referencing_scope, edge) in edges {
++            if self.graph.scope_at(referencing_scope).is_none() { continue; }
+             if let Err(err) = self.evaluate_simplexpr_in_scope(scope_index, &edge.expression).and_then(|updated_attr_value| {
+                 self.update_value(referencing_scope, edge.attr_name.to_var_name_ref(), updated_attr_value)
+             }) {
+@@ -289,9 +292,10 @@ impl ScopeGraph {
+ 
+     /// Call all of the listeners in a given `scope_index` that are affected by a change to the `updated_var`.
+     fn call_listeners_in_scope(&mut self, scope_index: ScopeIndex, updated_var: &VarName) -> Result<()> {
+-        let scope = self.graph.scope_at(scope_index).context("Scope not in graph")?;
++        let Some(scope) = self.graph.scope_at(scope_index) else { return Ok(()); };
+         if let Some(triggered_listeners) = scope.listeners.get(updated_var) {
+             for listener in triggered_listeners.clone() {
++                if self.graph.scope_at(scope_index).is_none() { break; }
+                 let required_variables = self.lookup_variables_in_scope(scope_index, &listener.needed_variables)?;
+                 if let Err(err) = (*listener.f)(self, required_variables).context("Error while updating UI after state change") {
+                     error_handling_ctx::print_error(err);
+@@ -608,6 +612,31 @@ mod test {
+ 
+     use super::*;
+ 
++    #[test]
++    fn test_removed_scope_stops_remaining_callbacks() {
++        let (send, _recv) = tokio::sync::mpsc::unbounded_channel();
++        let mut tree = ScopeGraph::from_global_vars(hashmap! { "value".into() => "first".into() }, send);
++        let root = tree.root_index;
++        let child = tree.register_new_scope("loop row".into(), Some(root), root, hashmap! {}).unwrap();
++        let calls = Rc::new(std::cell::Cell::new(0));
++        let removing_calls = calls.clone();
++        tree.register_listener(child, Listener { needed_variables: vec!["value".into()], f: Box::new(move |tree, _| {
++            let previous = removing_calls.get();
++            removing_calls.set(previous + 1);
++            if previous > 0 { tree.remove_scope(child); }
++            Ok(())
++        }) }).unwrap();
++        let remaining_calls = Rc::new(std::cell::Cell::new(0));
++        let observed = remaining_calls.clone();
++        tree.register_listener(child, Listener { needed_variables: vec!["value".into()], f: Box::new(move |_, _| {
++            observed.set(observed.get() + 1);
++            Ok(())
++        }) }).unwrap();
++        tree.update_global_value(&"value".into(), "second".into()).unwrap();
++        assert!(tree.scope_at(child).is_none());
++        assert_eq!(remaining_calls.get(), 1, "Removed loop rows must not receive further callbacks");
++    }
++
+     #[test]
+     fn test_nested_inheritance() {
+         let globals = hashmap! {
 diff --git a/crates/eww/src/widgets/widget_definitions.rs b/crates/eww/src/widgets/widget_definitions.rs
-index 8284d0f..b9bc9ea 100644
+index 8284d0f..b0707a2 100644
 --- a/crates/eww/src/widgets/widget_definitions.rs
 +++ b/crates/eww/src/widgets/widget_definitions.rs
-@@ -829,6 +829,19 @@ fn build_gtk_event_box(bargs: &mut BuilderArgs) -> Result<gtk::EventBox> {
+@@ -84,6 +84,7 @@ pub const BUILTIN_WIDGET_NAMES: &[&str] = &[
+     WIDGET_NAME_OVERLAY,
+     WIDGET_NAME_STACK,
+     WIDGET_NAME_SYSTRAY,
++    WIDGET_NAME_XEMBED,
+ ];
+ 
+ /// widget definitions
+@@ -114,6 +115,7 @@ pub(super) fn widget_use_to_gtk_widget(bargs: &mut BuilderArgs) -> Result<gtk::W
+         WIDGET_NAME_OVERLAY => build_gtk_overlay(bargs)?.upcast(),
+         WIDGET_NAME_STACK => build_gtk_stack(bargs)?.upcast(),
+         WIDGET_NAME_SYSTRAY => build_systray(bargs)?.upcast(),
++        WIDGET_NAME_XEMBED => build_xembed(bargs)?.upcast(),
+         _ => {
+             return Err(DiagError(gen_diagnostic! {
+                 msg = format!("referenced unknown widget `{}`", bargs.widget_use.name),
+@@ -125,6 +127,38 @@ pub(super) fn widget_use_to_gtk_widget(bargs: &mut BuilderArgs) -> Result<gtk::W
+     Ok(gtk_widget)
+ }
+ 
++
++const WIDGET_NAME_XEMBED: &str = "xembed";
++/// @widget xembed
++/// @desc Embed a GTK X11 plug, such as the optional official-web-app view.
++fn build_xembed(bargs: &mut BuilderArgs) -> Result<gtk::Socket> {
++    let gtk_widget = gtk::Socket::new();
++    let child: Rc<RefCell<Option<std::process::Child>>> = Rc::new(RefCell::new(None));
++    let stopped = child.clone();
++    gtk_widget.connect_destroy(move |_| {
++        if let Some(mut process) = stopped.borrow_mut().take() {
++            std::thread::spawn(move || { let _ = process.wait(); });
++        }
++    });
++    // Keep the host alive if a web process exits; the enclosing card stays usable.
++    gtk_widget.connect_plug_removed(|_| true);
++    def_widget!(bargs, _g, gtk_widget, {
++        // @prop command - command receiving its host XID in EWW_SOCKET_ID
++        prop(command: as_string) {
++            let running = child.clone();
++            connect_signal_handler!(gtk_widget, gtk_widget.connect_realize(move |socket| {
++                if running.borrow().is_some() { return; }
++                match std::process::Command::new("/bin/sh").args(["-c", &command])
++                    .env("EWW_SOCKET_ID", socket.id().to_string()).spawn() {
++                    Ok(process) => { *running.borrow_mut() = Some(process); }
++                    Err(error) => log::error!("Could not start embedded app: {}", error),
++                }
++            }));
++        }
++    });
++    Ok(gtk_widget)
++}
++
+ /// Deprecated attributes from top of widget hierarchy
+ static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
+     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
+@@ -829,15 +863,36 @@ fn build_gtk_event_box(bargs: &mut BuilderArgs) -> Result<gtk::EventBox> {
      });
  
      def_widget!(bargs, _g, gtk_widget, {
@@ -424,3 +541,23 @@ index 8284d0f..b9bc9ea 100644
          // @prop timeout - timeout of the command. Default: "200ms"
          // @prop onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
          prop(timeout: as_duration = Duration::from_millis(200), onscroll: as_string) {
+             gtk_widget.add_events(gdk::EventMask::SCROLL_MASK);
+             gtk_widget.add_events(gdk::EventMask::SMOOTH_SCROLL_MASK);
+             connect_signal_handler!(gtk_widget, gtk_widget.connect_scroll_event(move |_, evt| {
+-                let delta = evt.delta().1;
+-                if delta != 0f64 { // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
+-                    run_command(timeout, &onscroll, &[if delta < 0f64 { "up" } else { "down" }]);
++                let direction = match evt.direction() {
++                    gdk::ScrollDirection::Up => Some("up"),
++                    gdk::ScrollDirection::Down => Some("down"),
++                    gdk::ScrollDirection::Smooth => {
++                        let delta = evt.delta().1;
++                        if delta < 0.0 { Some("up") } else if delta > 0.0 { Some("down") } else { None }
++                    },
++                    _ => None,
++                };
++                if let Some(direction) = direction {
++                    run_command(timeout, &onscroll, &[direction]);
+                 }
+                 glib::Propagation::Proceed
+             }));

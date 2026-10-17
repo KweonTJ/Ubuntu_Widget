@@ -110,7 +110,7 @@ class Usage:
             cache_write('screen-time.json',self.state)
         else:self.last=None
         apps=sorted(self.state.get(today,{}).items(),key=lambda p:p[1],reverse=True)
-        return {'total':duration(sum(v for _,v in apps)), 'rows':[{'name':k,'value':duration(v)} for k,v in apps[:8]],
+        return {'total':duration(sum(v for _,v in apps)), 'rows':[{'name':k,'value':duration(v),'index':i,'percent':round(v/max(1,sum(n for _,n in apps))*100)} for i,(k,v) in enumerate(apps[:8])],
                 'status':'기록 중 · 잠금·1분 이상 자리 비움 제외' if cfg['enabled'] else '기록 꺼짐 · 설정에서 시작', 'tracking':cfg['enabled']}
 
 def clear_usage():
