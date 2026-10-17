@@ -1,10 +1,12 @@
 # Ubuntu Widget
 
+**English** | [한국어](README.ko.md)
+
 [![Package checks](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml)
 
 A macOS-inspired desktop widget library for **Ubuntu GNOME on Xorg**. Browse **34 built-in choices**, add individual widgets, and place them on a 16 px grid. Cards share rounded corners, responsive layouts, light/dark themes, and optional glass effects.
 
-This is an independent community project, not an Apple product. The current on-screen interface is primarily Korean; the setup labels used below include their original text. This README and installation documentation are in English.
+This is an independent community project, not an Apple product. The current on-screen interface is primarily Korean; the setup labels used below include their original text. A Korean README is available through the language link above; additional documentation is in English.
 
 ![Widget Library rendered with clean defaults](docs/images/widget-library.png)
 
