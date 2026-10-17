@@ -29,3 +29,13 @@ No real Toss/Home Assistant account credentials were used in these checks. A suc
 The container smoke test is reproducible with `make test-deb`. It uses a virtual X server, not GNOME, so it does not extend the desktop support claim or re-verify GNOME-specific blur/stacking behavior.
 
 The CI workflow runs package checks on Ubuntu 22.04 and 24.04. It does not launch a GNOME desktop, and its results must not be presented as full Ubuntu 24.04 desktop verification. That target remains experimental.
+
+## Body drag and two-sided width controls
+
+A physical pointer test on an isolated Xvfb display verified label/body dragging,
+dragging from inside a scroll viewport, 16 px movement, left-edge and right-edge
+resizing, keeping the opposite edge fixed, the minimum width, normal button
+clicks, ignoring drags on controls, scrolling, right-click handling, and restoring
+saved geometry after reopening. Run `make test-native` after building the engine;
+install `xvfb` and `xauth` first. The ordinary test suite skips this optional GUI
+test unless `EWW_NATIVE_TEST_BINARY` is provided.

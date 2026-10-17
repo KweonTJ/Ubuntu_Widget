@@ -327,7 +327,7 @@ class Gallery(Gtk.Application):
             w,h=store.PRESETS[key];self.dimensions.set_text(f'{w} × {h} · 추가한 뒤 자유롭게 조절 가능')
     def add_selected(self):
         widget_id=self.selected;preset=self.preset
-        self.work(lambda:store.add_library(widget_id,preset),'바탕화면에 적용했습니다. 오른쪽 위 모서리를 끌어 위치를 옮기세요.',lambda wid:setattr(self,'selected',wid))
+        self.work(lambda:store.add_library(widget_id,preset),'바탕화면에 적용했습니다. 위젯 본문을 드래그해 이동하고 양쪽 가장자리로 가로폭을 조절하세요.',lambda wid:setattr(self,'selected',wid))
     def work(self,fn,message,after=None):
         if self.busy:return
         self.busy=True;self.spinner.start();self.details.set_sensitive(False);self.status.set_text('적용하는 중…')

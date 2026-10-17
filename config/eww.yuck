@@ -128,16 +128,16 @@
 (defwidget movable-card [name theme]
   (box :class {(theme == "dark" ? "movable-canvas eww-dark" : "movable-canvas eww-light") + " widget-" + name + (glass.enabled ? " glass-master-on" : "") + (services.tracking ? " usage-recording" : "")} :orientation "v" :space-evenly false
     (overlay :hexpand true :vexpand true
-      (eventbox :onrightclick "./scripts/manager-launch.py menu ${name}" :timeout "2s"
+      (eventbox :drag-window true :drag-grid 16
+        :onrightclick "./scripts/manager-launch.py menu ${name}" :timeout "2s"
         (box :orientation "v" :space-evenly false :vexpand true (children)))
-      (box :class "corner-tools" :space-evenly false :hexpand true :valign "start"
-        (button :class "close-widget" :tooltip "위젯 지우기 · 앱 메뉴에서 복원 가능"
-          :onclick "./scripts/windows.py remove ${name}"
-          (label :text "×"))
-        (box :hexpand true)
-        (eventbox :drag-window true :drag-grid 16 :cursor "grab"
-          :tooltip "이동 · 16px 격자에 맞춤"
-          (box :class "corner-grip")))
+      (button :class "close-widget" :halign "start" :valign "start" :style "margin: 6px;"
+        :tooltip "위젯 지우기 · 앱 메뉴에서 복원 가능" :onclick "./scripts/windows.py remove ${name}"
+        (label :text "×"))
+      (eventbox :resize-window true :resize-axis "horizontal" :resize-edge "left" :resize-grid 16
+        :resize-min-width 192 :resize-min-height 96 :cursor "ew-resize"
+        :halign "start" :valign "fill" :tooltip "드래그해서 왼쪽 가로폭 조절"
+        (box :class "width-grip" :style "margin: 24px 0 24px 3px;" :vexpand true))
       (eventbox :resize-window true :resize-axis "horizontal" :resize-grid 16
         :resize-min-width 192 :resize-min-height 96 :cursor "ew-resize"
         :halign "end" :valign "fill" :tooltip "좌우로 드래그해서 가로폭 조절"

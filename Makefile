@@ -1,4 +1,4 @@
-.PHONY: build source deb test test-deb
+.PHONY: build source deb test test-deb test-native
 
 build:
 	./scripts/build-eww.sh
@@ -17,3 +17,6 @@ test:
 
 test-deb:
 	docker run --rm --mount type=bind,src="$(CURDIR)",dst=/package,readonly ubuntu:22.04 /bin/bash /package/tests/deb-smoke.sh /package/dist/ubuntu-widget_$(shell cat VERSION)-1_amd64.deb
+
+test-native:
+	xvfb-run -a env EWW_NATIVE_TEST_BINARY="$(CURDIR)/build/eww" /usr/bin/python3 -m unittest discover -s tests -p test_native_controls.py -v

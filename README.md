@@ -100,8 +100,8 @@ Website choices are launchers: they open the website, rather than embedding a si
 
 ## Move, resize and remove
 
-- **Move:** drag the **inside upper-right corner** of a widget. Movement snaps to a 16 px grid.
-- **Change width:** drag the right edge.
+- **Move:** press and drag the widget body, including labels and scroll content. Movement snaps to a 16 px grid; buttons and other controls keep their normal actions.
+- **Change width:** drag either the left or right edge. The opposite edge stays fixed.
 - **Change width and height:** drag the inside lower-right corner.
 - **Remove:** click the **inside upper-left corner**, or use the right-click menu / library. The X icon and grip marks are intentionally invisible.
 - **Restore:** add the widget again from the library. Removing a card does not delete its saved content.
