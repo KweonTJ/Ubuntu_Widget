@@ -60,7 +60,7 @@
  (movable-card :theme appearance :name "uw-home" (home-card)))
 (defwidget screentime-card []
  (extra-card :kind "screentime" :title "스크린 타임" :tone "purple"
- 
+
  (label :class "extra-value" :style {sizes.screentime.width < 264 ? "font-size: 24px;" : "font-size: 32px;"} :text {services.screen.total ?: "0분"} :xalign 0)
 (label :class "extra-detail" :text {services.screen.status ?: "기록 꺼짐"} :xalign 0 :wrap true :wrap-mode "wordchar")
  (box :orientation "v" :space-evenly false :spacing 8
@@ -76,7 +76,7 @@
  (movable-card :theme appearance :name "uw-screentime" (screentime-card)))
 (defwidget agenda-card []
  (extra-card :kind "agenda" :title "다가오는 일정" :tone "pink"
- 
+
  (label :class "extra-detail" :visible {extra.agenda_empty ?: true} :text "다가오는 일정이 없습니다." :xalign 0 :wrap true :wrap-mode "wordchar")
  (box :orientation "v" :space-evenly false :spacing 12
   (for event in {extra.agenda ?: "[]"}
@@ -91,7 +91,7 @@
  (movable-card :theme appearance :name "uw-agenda" (agenda-card)))
 (defwidget analog-card []
  (extra-card :kind "analog" :title "아날로그 시계" :tone "neutral"
- 
+
  (image :visible {services.clock != ""} :path {services.clock ?: ""} :image-width {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :image-height {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :halign "center")
  (label :class "extra-detail" :text {(services.clock_time ?: "—") + " · 이 PC의 현지 시각"} :xalign 0 :wrap true :wrap-mode "wordchar")
 ))
@@ -102,7 +102,7 @@
  (movable-card :theme appearance :name "uw-analog" (analog-card)))
 (defwidget podcast-card []
  (extra-card :kind "podcast" :title "팟캐스트" :tone "pink"
- 
+
  (label :class "extra-note-title" :text {info.music.title ?: "재생 중인 미디어 없음"} :xalign 0 :wrap true :wrap-mode "wordchar")
  (label :class "extra-detail" :text {info.music.artist ?: "MPRIS 지원 앱에서 재생하세요"} :xalign 0 :wrap true :wrap-mode "wordchar")
  (box :orientation {sizes.podcast.width < 264 ? "v" : "h"} :space-evenly true :spacing 5
