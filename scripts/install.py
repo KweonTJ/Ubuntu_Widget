@@ -6,12 +6,10 @@ import os
 from pathlib import Path
 import shutil
 import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from initialize import initialize, MARKER, STATE
 
 ROOT=Path(__file__).resolve().parent.parent
-STATE={'positions.json','hidden-widgets.json','enabled-widgets.json','widget-settings.json',
-       'connections.json','web-widgets.json','web-windows.yuck','glass-settings.json',
-       'theme-mode','glass-compositor-state.json'}
-MARKER='.ubuntu-widget-package'
 
 def desktop_quote(path):
     # Desktop Entry Exec syntax is not a shell; escape its reserved characters.
@@ -28,14 +26,7 @@ def install(binary,autostart=False):
     if b'eww-native-draggable' not in content or b'resize-min-width' not in content:
         raise ValueError('This Eww does not contain the required native move/resize extension. Use scripts/build-eww.sh.')
     config.mkdir(parents=True,exist_ok=True,mode=0o700);lib.mkdir(parents=True,exist_ok=True)
-    for source in (ROOT/'config').rglob('*'):
-        relative=source.relative_to(ROOT/'config')
-        if source.is_dir() or '__pycache__' in relative.parts or source.suffix=='.pyc':continue
-        target=config/relative
-        if relative.as_posix() in STATE and target.exists():continue
-        target.parent.mkdir(parents=True,exist_ok=True)
-        shutil.copy2(source,target)
-    (config/MARKER).write_text('Ubuntu Widget package v0.1.0\n')
+    initialize(config, force=True)
     # Regenerate CSS for the current settings at runtime; the daemon handles this.
     installed_binary=lib/'eww'
     if binary.resolve()!=installed_binary.resolve():shutil.copy2(binary,installed_binary)

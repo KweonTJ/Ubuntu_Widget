@@ -34,6 +34,23 @@ On supported Ubuntu installations, choose **Ubuntu on Xorg** from the login-scre
 
 ## Install
 
+### Recommended: install the Debian package
+
+Download `ubuntu-widget_0.1.1-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
+
+```bash
+sudo apt install ./ubuntu-widget_0.1.1-1_amd64.deb
+/usr/bin/ubuntu-widget
+```
+
+APT installs the required runtime dependencies. **Rust and build tools are not required**: the patched Eww engine is included. Open **Widget Library / 위젯 보관함** from the application menu afterwards. Use Ubuntu 22.04 amd64 with an Xorg session; the support limits above also apply to the Debian package.
+
+The first launch creates your own configuration with an empty desktop. Package installation does not copy the developer's settings, access accounts, or enable autostart. Updates refresh program templates on your next launch and preserve notes, connections and layout. If you previously installed from source, remove that installation's launcher with `./scripts/uninstall.py` before switching to the Debian package; your configuration is kept.
+
+Release assets also include `SHA256SUMS` and the matching `*-source.tar.xz` archive containing patched Eww and vendored Cargo sources. See [packaging and rebuilding](docs/PACKAGING.md).
+
+### Build and install from source
+
 Runtime requirements: Python 3.10+, GTK 3, a full GNOME/Xorg session, and a working user systemd/D-Bus session.
 
 Install runtime and build dependencies through Ubuntu's package manager:
@@ -41,8 +58,9 @@ Install runtime and build dependencies through Ubuntu's package manager:
 ```bash
 sudo apt update
 sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
-  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus \
-  gir1.2-gtk-3.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 \
+  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
+  gir1.2-gtk-3.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
+  gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
   pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
 ```
 
@@ -58,7 +76,7 @@ cd Ubuntu_Widget
 
 - `build-eww.sh` fetches Eww commit `48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa`, checks and applies our native-control patch, and builds only its X11 backend. The script uses the installed **stable** Rust toolchain instead of the old toolchain pinned by upstream. `RUST_TOOLCHAIN` can select another installed toolchain.
 - A stock Eww binary does **not** implement the custom drag/resize attributes used by these widgets. Do not replace the patched engine with a distribution Eww package.
-- This repository distributes source and the patch, not a copy of a developer's local executable or desktop backup. The initial desktop engine was verified with stable Rust 1.99.0 on Ubuntu 22.04.
+- The Git repository contains source and the patch. Release Debian packages include an engine built from that source, without a developer's desktop backup. The initial desktop engine was verified with stable Rust 1.99.0 on Ubuntu 22.04.
 - If a build runs out of memory, retry with `CARGO_BUILD_JOBS=2 ./scripts/build-eww.sh`.
 - To use an already built **patched** binary, run `./install.sh --eww /path/to/eww`.
 - Add `--autostart` to install a login entry for widgets you have added. Autostart is otherwise off.
@@ -173,12 +191,17 @@ The published defaults contain **no personal notes, events, watchlists, device I
 | Configuration and local content | `${XDG_CONFIG_HOME:-~/.config}/ubuntu-widget/` |
 | Logs and usage history | `${XDG_CACHE_HOME:-~/.cache}/ubuntu-widget/` |
 | API credentials | GNOME Keyring / Secret Service, namespaced to the configuration path |
-| Patched engine | `~/.local/lib/ubuntu-widget/eww` |
-| Launcher | `~/.local/bin/ubuntu-widget` |
+| Patched engine | Debian: `/usr/lib/ubuntu-widget/eww`; source install: `~/.local/lib/ubuntu-widget/eww` |
+| Launcher | Debian: `/usr/bin/ubuntu-widget`; source install: `~/.local/bin/ubuntu-widget` |
+| Debian package templates | `/usr/share/ubuntu-widget/` (copied into each user's configuration on first launch) |
 
 There is no analytics endpoint. Network traffic is limited to providers you connect/configure and websites you explicitly open. Do not commit your installed configuration or create public archives from it. See [privacy details](docs/PRIVACY.md).
 
 ## Update, uninstall and troubleshoot
+
+For the Debian package, download the new `.deb` and install it with `sudo apt install ./<downloaded-file>.deb`, then run `/usr/bin/ubuntu-widget restart`. To remove its program files, use `sudo apt remove ubuntu-widget`. User configuration and keyring entries are preserved, including when the package is purged. Disconnect accounts and turn glass off in the app before removing it if you want credentials deleted and compositor preferences restored. Autostart is opt-in; if you configured a startup entry yourself, remove that entry too.
+
+For a source installation:
 
 ```bash
 git pull --ff-only

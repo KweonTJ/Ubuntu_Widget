@@ -6,7 +6,9 @@
 - The native-controls patch targets commit `48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa` (Eww 0.6.0).
 - Eww uses the **MIT License**. Its copyright and permission text are retained in [`LICENSES/Eww-MIT.txt`](LICENSES/Eww-MIT.txt).
 - `patches/eww-native-controls.patch` adds grid movement, persisted placement and resize support, and adjusts the native widget definitions and their lifecycle. The rest of Eww is fetched at build time, not copied into this repository.
-- Eww's Cargo dependencies and their licenses are described by the pinned source's `Cargo.lock` and individual packages. This repository does not vendor or relicense those dependencies.
+- Eww's Cargo dependencies and their licenses are described by the pinned source's `Cargo.lock` and individual packages. The Git repository does not vendor or relicense those dependencies.
+- Release `.deb` files contain a compiled patched Eww engine, including statically linked Rust dependencies. Their individual notices and an inventory are installed under `/usr/share/doc/ubuntu-widget/rust-licenses/`. The matching release `*-source.tar.xz` contains the application, patched Eww and vendored dependency sources, with offline rebuild/relink instructions in `BUILD.md`.
+- The Rust dbusmenu bindings are LGPL-3.0-only. Their corresponding source and the application source needed to rebuild/relink them are supplied in that accompanying source archive. Modified engines may be selected with `EWW_WIDGET_BINARY`; no signing key or device authorization is required. Reverse engineering for debugging modifications to those libraries is not restricted by this project. The LGPL and GPL texts accompany their notices.
 
 ## System dependencies and optional software
 

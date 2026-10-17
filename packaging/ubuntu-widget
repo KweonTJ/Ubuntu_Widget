@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+case "${1:-edit}" in
+  --help|help) exec /usr/share/ubuntu-widget/bin/ubuntu-widget --help ;;
+esac
+if [ "$(id -u)" -eq 0 ]; then
+  echo 'Run Ubuntu Widget as your desktop user, without sudo.' >&2
+  exit 1
+fi
+if [ "${XDG_SESSION_TYPE:-x11}" != x11 ] || [ -z "${DISPLAY:-}" ]; then
+  echo 'Ubuntu Widget requires a full Xorg desktop session. Log in using Ubuntu on Xorg.' >&2
+  exit 1
+fi
+export EWW_WIDGET_CONFIG="${EWW_WIDGET_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/ubuntu-widget}"
+export EWW_WIDGET_BINARY="${EWW_WIDGET_BINARY:-/usr/lib/ubuntu-widget/eww}"
+/usr/bin/python3 /usr/share/ubuntu-widget/scripts/initialize.py
+exec /usr/share/ubuntu-widget/bin/ubuntu-widget "$@"

@@ -34,6 +34,23 @@ echo "$XDG_SESSION_TYPE"  # x11이 출력되어야 합니다
 
 ## 설치
 
+### 권장: Debian 패키지로 설치
+
+[GitHub 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)에서 `ubuntu-widget_0.1.1-1_amd64.deb`를 내려받으세요. 다운로드한 폴더에서 터미널을 열고 실행하세요.
+
+```bash
+sudo apt install ./ubuntu-widget_0.1.1-1_amd64.deb
+/usr/bin/ubuntu-widget
+```
+
+APT가 필요한 실행 의존성을 함께 설치합니다. 패치된 Eww 엔진이 포함되어 있어 **Rust나 빌드 도구를 설치할 필요가 없습니다**. 이후 앱 메뉴의 **Widget Library / 위젯 보관함**에서도 실행할 수 있습니다. Ubuntu 22.04 amd64의 Xorg 세션에서 사용하세요. 위의 지원 범위는 Debian 패키지에도 동일하게 적용됩니다.
+
+처음 실행하면 각 사용자의 설정을 만들고 빈 바탕화면으로 시작합니다. 패키지 설치 시 개발자의 설정을 복사하거나 계정에 접근하거나 자동 실행을 켜지 않습니다. 업데이트 후 다음 실행에서 프로그램 템플릿을 갱신하며 메모·연결 설정·배치를 보존합니다. 기존에 소스로 설치했다면 해당 소스의 `./scripts/uninstall.py`로 기존 실행기를 제거한 뒤 Debian 패키지로 전환하세요. 사용자 설정은 유지됩니다.
+
+릴리즈에는 `SHA256SUMS`와 해당 빌드의 `*-source.tar.xz`도 함께 제공합니다. 소스 압축 파일에는 패치된 Eww와 Cargo 의존성 소스가 포함됩니다. [패키지 관리 및 재빌드 안내](docs/PACKAGING.md)를 참고하세요.
+
+### 소스에서 빌드하여 설치
+
 실행 요구 사항: Python 3.10 이상, GTK 3, 전체 GNOME/Xorg 세션, 정상 동작하는 사용자 systemd/D-Bus 세션.
 
 Ubuntu 패키지 관리자로 실행 및 빌드 의존성을 설치하세요.
@@ -41,8 +58,9 @@ Ubuntu 패키지 관리자로 실행 및 빌드 의존성을 설치하세요.
 ```bash
 sudo apt update
 sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
-  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus \
-  gir1.2-gtk-3.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 \
+  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
+  gir1.2-gtk-3.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
+  gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
   pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
 ```
 
@@ -58,7 +76,7 @@ cd Ubuntu_Widget
 
 - `build-eww.sh`는 Eww 커밋 `48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa`를 가져와 이동·크기 조절 패치를 검사하고 적용한 뒤, X11 백엔드만 빌드합니다. 원본 프로젝트에 고정된 오래된 도구 모음 대신 설치된 **stable** Rust 도구 모음을 사용합니다. `RUST_TOOLCHAIN`으로 다른 설치된 도구 모음을 선택할 수 있습니다.
 - 일반 Eww 바이너리에는 이 위젯에서 사용하는 사용자 정의 이동·크기 조절 속성이 **구현되어 있지 않습니다**. 패치된 엔진을 배포판의 Eww 패키지로 대체하지 마세요.
-- 저장소는 소스와 패치를 배포합니다. 개발자의 로컬 실행 파일이나 바탕화면 백업을 배포하지 않습니다. 최초 바탕화면 검증에는 Ubuntu 22.04와 stable Rust 1.99.0을 사용했습니다.
+- Git 저장소에는 소스와 패치를 보관합니다. 릴리즈의 Debian 패키지에는 해당 소스로 빌드한 엔진을 포함하며 개발자의 바탕화면 백업은 포함하지 않습니다. 최초 바탕화면 검증에는 Ubuntu 22.04와 stable Rust 1.99.0을 사용했습니다.
 - 빌드 중 메모리가 부족하면 `CARGO_BUILD_JOBS=2 ./scripts/build-eww.sh`로 다시 시도하세요.
 - 이미 빌드한 **패치 적용 바이너리**가 있다면 `./install.sh --eww /path/to/eww`로 설치할 수 있습니다.
 - 추가한 위젯을 로그인할 때 자동으로 실행하려면 설치 명령에 `--autostart`를 붙이세요. 기본값은 자동 실행 꺼짐입니다.
@@ -173,12 +191,17 @@ cd Ubuntu_Widget
 | 설정과 로컬 콘텐츠 | `${XDG_CONFIG_HOME:-~/.config}/ubuntu-widget/` |
 | 로그와 사용 기록 | `${XDG_CACHE_HOME:-~/.cache}/ubuntu-widget/` |
 | API 인증 정보 | GNOME Keyring / Secret Service. 설정 경로를 기준으로 구분하여 저장 |
-| 패치된 엔진 | `~/.local/lib/ubuntu-widget/eww` |
-| 실행기 | `~/.local/bin/ubuntu-widget` |
+| 패치된 엔진 | Debian 패키지: `/usr/lib/ubuntu-widget/eww`, 소스 설치: `~/.local/lib/ubuntu-widget/eww` |
+| 실행기 | Debian 패키지: `/usr/bin/ubuntu-widget`, 소스 설치: `~/.local/bin/ubuntu-widget` |
+| Debian 패키지 템플릿 | `/usr/share/ubuntu-widget/`(처음 실행할 때 각 사용자의 설정 폴더에 복사) |
 
 분석 정보 수집용 서버는 없습니다. 네트워크 통신은 사용자가 연결·설정한 제공 업체와 직접 연 웹사이트로 제한됩니다. 설치된 사용자 설정을 커밋하거나 이를 공개 압축 파일로 배포하지 마세요. [개인정보 문서](docs/PRIVACY.md)를 참고하세요.
 
 ## 업데이트·삭제·문제 해결
+
+Debian 패키지는 새 `.deb`를 내려받아 `sudo apt install ./<다운로드한파일>.deb`로 설치하고 `/usr/bin/ubuntu-widget restart`로 다시 실행하세요. 프로그램 삭제는 `sudo apt remove ubuntu-widget`를 사용하세요. 패키지를 완전히 제거(purge)해도 개인 설정과 키링 항목은 남습니다. 인증 정보를 지우고 화면 합성기 설정을 복원하려면 먼저 앱에서 계정 연결을 해제하고 글래스 효과를 끄세요. 자동 실행은 선택 사항이며, 직접 시작 프로그램을 등록했다면 해당 항목도 삭제하세요.
+
+소스로 설치한 경우:
 
 ```bash
 git pull --ff-only

@@ -92,7 +92,7 @@
 (defwidget analog-card []
  (extra-card :kind "analog" :title "아날로그 시계" :tone "neutral"
 
- (image :visible {services.clock != ""} :path {services.clock ?: ""} :image-width {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :image-height {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :halign "center")
+ (image :visible {services.clock != ""} :path {services.clock ?: "assets/blank.svg"} :image-width {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :image-height {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :halign "center")
  (label :class "extra-detail" :text {(services.clock_time ?: "—") + " · 이 PC의 현지 시각"} :xalign 0 :wrap true :wrap-mode "wordchar")
 ))
 (defwindow uw-analog

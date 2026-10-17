@@ -22,14 +22,19 @@ else
   git -C "$source_dir" apply "$project_root/patches/eww-native-controls.patch"
 fi
 # Override the old upstream toolchain with the user's installed stable Rust.
-# Remap this machine's source directory out of Rust diagnostics in the result.
-export CARGO_ENCODED_RUSTFLAGS="${CARGO_ENCODED_RUSTFLAGS:+$CARGO_ENCODED_RUSTFLAGS$'\x1f'}--remap-path-prefix=$source_dir=eww-source"
+# Keep developer paths out of diagnostics embedded in release executables,
+# including dependency sources, the Rust sysroot and generated build files.
+for mapping in "$HOME=/build/user" "${CARGO_HOME:-$HOME/.cargo}=/build/cargo" "$project_root=/build/ubuntu-widget" "$source_dir=/build/eww-source"; do
+  export CARGO_ENCODED_RUSTFLAGS="${CARGO_ENCODED_RUSTFLAGS:+$CARGO_ENCODED_RUSTFLAGS$'\x1f'}--remap-path-prefix=$mapping"
+done
 widget_target_dir="${CARGO_TARGET_DIR:-$source_dir/target}"
 mkdir -p -- "$widget_target_dir"
 export CARGO_TARGET_DIR="$(cd -- "$widget_target_dir" && pwd)"
+export CARGO_ENCODED_RUSTFLAGS="$CARGO_ENCODED_RUSTFLAGS"$'\x1f'"--remap-path-prefix=$CARGO_TARGET_DIR=/build/target"
 (
   cd -- "$source_dir"
   cargo +"${RUST_TOOLCHAIN:-stable}" build --locked --release --no-default-features --features x11
+  cargo +"${RUST_TOOLCHAIN:-stable}" metadata --locked --filter-platform x86_64-unknown-linux-gnu --no-default-features --features x11 --format-version 1 > "$project_root/.build/cargo-metadata.json"
 )
 cp -- "$CARGO_TARGET_DIR/release/eww" "$project_root/build/eww"
 printf '%s\n' "$upstream_commit" > "$project_root/build/upstream-commit.txt"
