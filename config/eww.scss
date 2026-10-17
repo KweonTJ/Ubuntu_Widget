@@ -1,0 +1,160 @@
+/* Shared layout and light palette. Dark colors are in themes/dark.scss. */
+* {
+  all: unset;
+  font-family: "Noto Sans", "Noto Sans CJK KR", sans-serif;
+  font-size: 12px;
+  color: #252734;
+}
+window { background: transparent; }
+.widget-canvas { padding: 12px; }
+.card {
+  border-radius: 23px;
+  padding: 18px;
+  background: rgba(250, 250, 253, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow: 0 5px 12px rgba(18, 25, 40, 0.15);
+}
+.clock-card {
+  min-height: 138px;
+  background: linear-gradient(135deg, rgba(223, 237, 255, 0.97), rgba(235, 226, 252, 0.96));
+}
+.eyebrow { font-size: 11px; font-weight: 600; margin-left: 4px; color: #455d88; }
+.clock-time { font-size: 39px; font-weight: 500; letter-spacing: -2px; color: #23375e; }
+.clock-date { font-size: 11px; font-weight: 500; color: #34486c; }
+.clock-zone { font-size: 7px; letter-spacing: 0.7px; color: #7584a0; margin-top: 8px; }
+.calendar-card { padding: 15px 12px; min-height: 144px; }
+.calendar-title { font-size: 11px; font-weight: 700; color: #e45a64; margin-bottom: 7px; margin-left: 4px; }
+.weekdays label { font-size: 9px; color: #92929b; min-width: 18px; margin-bottom: 4px; }
+.day { font-size: 10px; min-width: 18px; min-height: 18px; border-radius: 9px; }
+.day.weekend { color: #9c9ca6; }
+.day.outside { color: #cdccd3; }
+.day.today { color: #fff; background: #f2656d; font-weight: 700; }
+.system-card { padding: 16px 19px 17px; }
+.card-heading { margin-bottom: 12px; }
+.card-heading label { font-weight: 600; margin-left: 6px; }
+.card-heading .live { color: #3b9973; font-size: 8px; font-weight: 500; letter-spacing: 0.6px; }
+.meter-name { font-size: 10px; color: #747682; }
+.meter-value { font-size: 24px; font-weight: 500; letter-spacing: -0.7px; margin: 1px 0 8px; }
+progressbar trough { min-height: 5px; border-radius: 6px; background: rgba(41, 44, 69, 0.09); }
+progressbar progress { min-height: 5px; border-radius: 6px; background: #789aeb; }
+.memory progressbar progress { background: #ad8cdd; }
+.disk progressbar progress { background: #e9ab79; }
+.meter-detail { font-size: 8px; color: #92929c; margin-top: 7px; }
+.music-card { padding: 16px 18px 12px; background: linear-gradient(120deg, rgba(254, 247, 250, 0.96), rgba(244, 240, 252, 0.96)); }
+.music-status { color: #b3738c; font-size: 9px; font-weight: 600; }
+.music-title { font-size: 12px; font-weight: 600; }
+.music-artist { font-size: 9px; color: #8d8292; }
+.transport { margin-top: 8px; }
+.transport-button { border-radius: 12px; padding: 8px 10px; }
+.play-button { background: rgba(255, 255, 255, 0.8); border-radius: 20px; padding: 10px; }
+.transport-button:hover, .play-button:hover { background: rgba(220, 208, 235, 0.65); }
+.transport-button:disabled, .play-button:disabled { opacity: 0.30; }
+.battery-card, .sound-card { padding: 15px 16px; }
+.battery-card { background: linear-gradient(130deg, rgba(241, 253, 244, 0.97), rgba(233, 246, 240, 0.95)); }
+.small-heading { font-size: 10px; font-weight: 600; }
+.small-detail { color: #8a9095; font-size: 9px; }
+.battery-card .small-detail { margin-top: 8px; color: #6b9282; }
+.sound-controls { margin-top: 9px; }
+.sound-controls button { min-height: 29px; border-radius: 10px; background: rgba(232, 233, 240, 0.8); }
+.sound-controls button label { font-size: 17px; color: #59647d; }
+.sound-controls button:hover { background: #dce4f4; }
+.sound-controls button:disabled { opacity: 0.35; }
+tooltip { background: #fbfbfd; border-radius: 7px; padding: 7px; }
+.movable-canvas { padding: 8px; }
+.card { padding-top: 25px; }
+.corner-grip {
+  min-height: 12px;
+  min-width: 24px;
+  border-radius: 6px;
+  margin: 0;
+  background: rgba(120, 113, 145, 0.08);
+}
+.corner-grip:hover { background: rgba(150, 137, 180, 0.26); }
+.corner-grip:active { background: rgba(150, 137, 180, 0.42); }
+.meter progressbar trough { min-width: 64px; }
+.meter progressbar { min-width: 0; }
+progressbar.horizontal { min-width: 0; }
+.corner-tools { margin: 6px 8px 0 0; }
+.close-widget { min-width: 14px; min-height: 12px; border-radius: 6px; }
+.close-widget label { font-size: 12px; color: #9c96ac; }
+.close-widget:hover { background: rgba(230, 98, 116, 0.20); }
+.close-widget:hover label { color: #e34f69; }
+.card, .calendar-card, .system-card, .music-card, .battery-card, .sound-card, .clock-card {
+  padding: 28px 18px 20px;
+  border-radius: 23px;
+  min-width: 0;
+  min-height: 0;
+}
+.corner-tools { margin: 6px 8px 0; }
+.close-widget { min-width: 18px; opacity: 0; }
+.width-grip { min-width: 8px; min-height: 28px; border-radius: 4px; margin-right: 3px; }
+.width-grip label { color: #9c96ac; font-size: 12px; }
+.resize-grip { padding: 4px; margin: 0 6px 6px 0; border-radius: 5px; }
+.width-grip:hover, .resize-grip:hover { background: rgba(150, 137, 180, 0.25); }
+.clock-time { font-size: 46px; }
+.small-heading { font-size: 12px; }
+.sound-value { font-size: 30px; font-weight: 500; }
+.sound-controls button { min-height: 32px; }
+.system-card.narrow { min-height: 0; }
+.music-card.narrow { min-height: 0; }
+.sound-card.narrow { min-height: 0; }
+.meter-detail { font-size: 8px; }
+.card.compact { padding: 24px 14px 10px; }
+.compact .clock-time { font-size: 28px; }
+.compact .sound-value { font-size: 22px; }
+.compact .meter-value { font-size: 18px; margin: 0 0 4px; }
+.compact .card-heading { margin-bottom: 6px; }
+.compact .transport { margin-top: 4px; }
+.compact .sound-controls { margin-top: 4px; }
+.content-scroll { min-width: 0; min-height: 0; }
+scrollbar { background: transparent; }
+scrollbar slider { min-width: 3px; border-radius: 3px; background: rgba(145, 140, 163, 0.35); }
+.corner-grip, .corner-grip:hover, .corner-grip:active, .width-grip, .width-grip:hover, .resize-grip, .resize-grip:hover { background: transparent; }
+.corner-grip { min-width: 32px; min-height: 16px; }
+.width-grip { min-width: 8px; min-height: 0; margin: 24px 3px 24px 0; }
+.resize-grip { min-width: 18px; min-height: 18px; padding: 0; margin: 0 6px 6px 0; }
+
+/* macOS-style device battery rings. */
+.battery-ring { color: #35c95a; background-color: rgba(49, 87, 65, 0.12); }
+.battery-ring.low { color: #e5a129; }
+.battery-ring.unknown { color: transparent; }
+.battery-ring-value { font-weight: 600; color: #253d31; letter-spacing: -0.5px; }
+.battery-ring-value.low { color: #a9660a; }
+.battery-device-name { font-size: 10px; font-weight: 500; color: #426352; }
+.battery-device-detail { font-size: 8px; color: #6b8475; }
+
+.web-card { background: linear-gradient(130deg, #f0edff, #edf2ff); }
+.web-open { border: none; border-radius: 14px; padding: 0; background: transparent; }
+.web-open:hover { background: rgba(140, 124, 190, 0.08); }
+.web-letter { min-width: 42px; min-height: 42px; border-radius: 12px; background: #8878bc; color: #fff; font-size: 24px; font-weight: 600; }
+.web-title { font-size: 15px; font-weight: 600; color: #373550; }
+.web-host { font-size: 9px; color: #78728c; }
+.web-open-label { font-size: 10px; color: #67549b; }
+
+/* Catalogue widgets share the existing card geometry and invisible handles. */
+.extra-heading { font-size: 11px; font-weight: 600; color: #60718f; }
+.extra-value { font-size: 40px; font-weight: 600; letter-spacing: -1px; }
+.extra-detail { font-size: 10px; color: #727e91; }
+.extra-blue { background: linear-gradient(130deg, #e6efff, #f1eafb); }
+.extra-yellow { background: linear-gradient(130deg, #fff5d9, #fff1e6); }
+.extra-green { background: linear-gradient(130deg, #e4f6ee, #eaf3fa); }
+.extra-city { font-size: 13px; }
+.extra-world-time { font-size: 18px; font-weight: 600; }
+.extra-network { font-size: 23px; font-weight: 600; }
+.extra-note-title { font-size: 16px; font-weight: 600; }
+.extra-note { font-size: 13px; }
+.extra-button { padding: 7px 9px; border-radius: 9px; background: rgba(115, 128, 153, .13); }
+.extra-button:hover, .extra-task:hover { background: rgba(115, 128, 153, .23); }
+.extra-button label { font-size: 11px; }
+.extra-task { padding: 5px 0; border-radius: 6px; }
+.extra-task label { font-size: 12px; }
+.extra-task.done label { opacity: .5; text-decoration-line: line-through; }
+
+.compact .extra-button { padding: 4px 5px; }
+.compact .extra-button label { font-size: 10px; }
+.extra-card progressbar trough { min-width: 24px; }
+@import "appearance";
+
+.extra-pink { background: linear-gradient(130deg, #ffeaf3, #f0e7ff); }
+.extra-purple { background: linear-gradient(130deg, #f0e8ff, #e5edff); }
+.extra-neutral { background: linear-gradient(130deg, #f7f8fd, #e9eef7); }

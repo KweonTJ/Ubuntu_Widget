@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+export EWW_WIDGET_CONFIG="${EWW_WIDGET_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/ubuntu-widget}"
+export EWW_WIDGET_BINARY="${EWW_WIDGET_BINARY:-$HOME/.local/lib/ubuntu-widget/eww}"
+export EWW_INTEGRATION_CACHE="${EWW_INTEGRATION_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/ubuntu-widget/integrations}"
+export GDK_BACKEND=x11
+case "${1:-edit}" in
+  --help|help)
+    echo 'Usage: ubuntu-widget [edit|start|hide|toggle|restore|restart|theme auto|theme light|theme dark|reset]'
+    exit 0 ;;
+esac
+if [ "${XDG_SESSION_TYPE:-x11}" != x11 ] || [ -z "${DISPLAY:-}" ]; then
+  echo 'Ubuntu Widget requires a full Xorg desktop session. Log in using Ubuntu on Xorg.' >&2
+  exit 1
+fi
+if [ ! -x "$EWW_WIDGET_BINARY" ]; then
+  echo 'The patched Eww binary is missing. Build and install the package first.' >&2
+  exit 1
+fi
+case "${1:-edit}" in
+  edit|manager) exec /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/manager-launch.py" ;;
+  start)
+    /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/start-service.py"
+    exec /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/windows.py" open ;;
+  hide) "$EWW_WIDGET_BINARY" --config "$EWW_WIDGET_CONFIG" kill || true ;;
+  toggle)
+    if "$EWW_WIDGET_BINARY" --config "$EWW_WIDGET_CONFIG" active-windows 2>/dev/null | /usr/bin/grep -q '^uw-'; then
+      "$EWW_WIDGET_BINARY" --config "$EWW_WIDGET_CONFIG" kill
+    else "$0" start; fi ;;
+  restore)
+    /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/start-service.py"
+    exec /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/windows.py" restore ;;
+  restart) "$0" hide; sleep .5; "$0" start ;;
+  theme)
+    case "${2:-auto}" in
+      auto|light|dark) printf '%s\n' "${2:-auto}" > "$EWW_WIDGET_CONFIG/theme-mode" ;;
+      *) echo 'Choose auto, light or dark.' >&2; exit 2 ;;
+    esac ;;
+  reset)
+    "$0" hide
+    if [ -f "$EWW_WIDGET_CONFIG/positions.json" ]; then
+      mv -- "$EWW_WIDGET_CONFIG/positions.json" "$EWW_WIDGET_CONFIG/positions.backup-$(date +%Y%m%d-%H%M%S).json"
+    fi
+    "$0" start ;;
+  *) echo 'Unknown command. Run ubuntu-widget --help.' >&2; exit 2 ;;
+esac

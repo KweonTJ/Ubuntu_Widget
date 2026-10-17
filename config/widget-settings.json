@@ -1,0 +1,12 @@
+{
+  "note": {
+    "title": "Note",
+    "text": ""
+  },
+  "todo": {
+    "tasks": []
+  },
+  "agenda": {
+    "events": []
+  }
+}

@@ -1,0 +1,117 @@
+; Personal integrations and additional native widgets.
+(defwidget stocks-card []
+ (extra-card :kind "stocks" :title "주식 · 토스증권" :tone "blue"
+ (label :class "extra-detail" :text {services.stocks.status ?: "연결을 설정하세요."} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {services.stocks.last_update ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (box :orientation "v" :spacing 12 :space-evenly false
+  (for row in {services.stocks.rows ?: "[]"}
+   (box :orientation "v" :space-evenly false :spacing 3
+    (box :orientation {sizes.stocks.width < 288 ? "v" : "h"} :space-evenly false :spacing 4
+     (label :class "extra-note-title" :text {row.name} :xalign 0 :hexpand true :truncate true :limit-width 1)
+     (label :class "extra-world-time" :text {row.value} :xalign 0))
+    (label :class "extra-detail" :text {row.symbol + " · " + row.detail} :xalign 0 :wrap true :wrap-mode "wordchar"))))
+(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-stocks" (label :text "연결·설정"))))
+(defwindow uw-stocks
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-stocks" (stocks-card)))
+(defwidget weather-card []
+ (extra-card :kind "weather" :title "날씨" :tone "blue"
+ (label :class "extra-note-title" :text {services.weather.city ?: "지역을 선택하세요"} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (box :orientation {sizes.weather.width < 264 ? "v" : "h"} :space-evenly false :spacing 10
+  (label :class "extra-value" :style {sizes.weather.height < 160 ? "font-size: 26px;" : "font-size: 40px;"} :text {services.weather.temperature ?: "—"} :xalign 0)
+  (box :orientation "v" :space-evenly false :valign "center"
+   (label :class "extra-detail" :text {services.weather.condition ?: ""} :xalign 0)
+   (label :class "extra-detail" :text {services.weather.range ?: ""} :xalign 0)))
+(label :class "extra-detail" :text {services.weather.air ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (box :orientation "v" :space-evenly false :spacing 6
+  (for hour in {services.weather.hours ?: "[]"}
+   (box :orientation {sizes.weather.width < 240 ? "v" : "h"} :space-evenly false :spacing 8
+    (label :class "extra-detail" :text {hour.name} :xalign 0)
+    (label :class "extra-detail" :text {hour.detail} :xalign 0 :hexpand true)
+    (label :class "extra-note-title" :text {hour.value} :xalign 0))))
+ (box :orientation "v" :space-evenly false :spacing 8
+  (for day in {services.weather.week ?: "[]"}
+   (box :orientation {sizes.weather.width < 288 ? "v" : "h"} :space-evenly false :spacing 4
+    (label :class "extra-detail" :text {day.name + " · " + day.detail} :xalign 0 :hexpand true)
+    (label :class "extra-detail" :text {day.value} :xalign 0))))
+(label :class "extra-detail" :text {services.weather.status ?: "연결을 설정하세요."} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {services.weather.last_update ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-weather" (label :text "지역 설정"))))
+(defwindow uw-weather
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-weather" (weather-card)))
+(defwidget home-card []
+ (extra-card :kind "home" :title "홈" :tone "yellow"
+ (label :class "extra-detail" :text {services.home.status ?: "연결을 설정하세요."} :xalign 0 :wrap true :wrap-mode "wordchar")(label :class "extra-detail" :text {services.home.last_update ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (box :orientation "v" :space-evenly false :spacing 10
+  (for device in {services.home.rows ?: "[]"}
+   (box :orientation "v" :space-evenly false :spacing 5
+    (label :class "extra-note-title" :text {device.name} :xalign 0 :wrap true :wrap-mode "wordchar")
+    (label :class "extra-detail" :text {device.value} :xalign 0 :wrap true :wrap-mode "wordchar")
+    (button :class "extra-button" :visible {device.control}
+     :onclick {"./scripts/integration_runtime.py home-action " + device.id + " " + device.action}
+     (label :text {device.button})))))
+(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-home" (label :text "연결·설정"))))
+(defwindow uw-home
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-home" (home-card)))
+(defwidget screentime-card []
+ (extra-card :kind "screentime" :title "스크린 타임" :tone "purple"
+ 
+ (label :class "extra-value" :style {sizes.screentime.width < 264 ? "font-size: 24px;" : "font-size: 32px;"} :text {services.screen.total ?: "0분"} :xalign 0)
+(label :class "extra-detail" :text {services.screen.status ?: "기록 꺼짐"} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (box :orientation "v" :space-evenly false :spacing 8
+  (for app in {services.screen.rows ?: "[]"}
+   (box :orientation {sizes.screentime.width < 288 ? "v" : "h"} :space-evenly false :spacing 5
+    (label :class "extra-detail" :text {app.name} :xalign 0 :hexpand true :truncate true :limit-width 1)
+    (label :class "extra-note-title" :text {app.value} :xalign 0))))
+(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-screentime" (label :text "기록 설정"))))
+(defwindow uw-screentime
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-screentime" (screentime-card)))
+(defwidget agenda-card []
+ (extra-card :kind "agenda" :title "다가오는 일정" :tone "pink"
+ 
+ (label :class "extra-detail" :visible {extra.agenda_empty ?: true} :text "다가오는 일정이 없습니다." :xalign 0 :wrap true :wrap-mode "wordchar")
+ (box :orientation "v" :space-evenly false :spacing 12
+  (for event in {extra.agenda ?: "[]"}
+   (box :orientation "v" :space-evenly false :spacing 3
+    (label :class "extra-detail" :text {event.date + " · " + event.time} :xalign 0)
+    (label :class "extra-note-title" :text {event.title} :xalign 0 :wrap true :wrap-mode "wordchar"))))
+(button :class "extra-button" :onclick "./scripts/manager-launch.py select uw-agenda" (label :text "일정 편집"))))
+(defwindow uw-agenda
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-agenda" (agenda-card)))
+(defwidget analog-card []
+ (extra-card :kind "analog" :title "아날로그 시계" :tone "neutral"
+ 
+ (image :visible {services.clock != ""} :path {services.clock ?: ""} :image-width {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :image-height {sizes.analog.width < 264 || sizes.analog.height < 224 ? 112 : 144} :halign "center")
+ (label :class "extra-detail" :text {(services.clock_time ?: "—") + " · 이 PC의 현지 시각"} :xalign 0 :wrap true :wrap-mode "wordchar")
+))
+(defwindow uw-analog
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-analog" (analog-card)))
+(defwidget podcast-card []
+ (extra-card :kind "podcast" :title "팟캐스트" :tone "pink"
+ 
+ (label :class "extra-note-title" :text {info.music.title ?: "재생 중인 미디어 없음"} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (label :class "extra-detail" :text {info.music.artist ?: "MPRIS 지원 앱에서 재생하세요"} :xalign 0 :wrap true :wrap-mode "wordchar")
+ (box :orientation {sizes.podcast.width < 264 ? "v" : "h"} :space-evenly true :spacing 5
+  (button :class "extra-button" :active {info.music.can_previous ?: false} :onclick "./scripts/data.py action previous" (label :text "이전"))
+  (button :class "extra-button" :active {info.music.can_play ?: false} :onclick "./scripts/data.py action play" (label :text {info.music.playing ? "일시정지" : "재생"}))
+  (button :class "extra-button" :active {info.music.can_next ?: false} :onclick "./scripts/data.py action next" (label :text "다음")))
+))
+(defwindow uw-podcast
+ :monitor '["<primary>", 0]'
+ :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+ :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+ (movable-card :theme appearance :name "uw-podcast" (podcast-card)))

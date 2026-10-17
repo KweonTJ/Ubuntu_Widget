@@ -1,0 +1,379 @@
+diff --git a/crates/eww/src/app.rs b/crates/eww/src/app.rs
+index 4b8eabc..8191b33 100644
+--- a/crates/eww/src/app.rs
++++ b/crates/eww/src/app.rs
+@@ -652,7 +652,9 @@ fn initialize_window<B: DisplayBackend>(
+             let _ = apply_window_position(geometry, monitor_geometry, &window);
+             if window_init.backend_options.x11.window_type != yuck::config::backend_window_options::X11WindowType::Normal {
+                 window.connect_configure_event(move |window, _| {
+-                    let _ = apply_window_position(geometry, monitor_geometry, window);
++                    if !crate::draggable::is_movable(window) {
++                        let _ = apply_window_position(geometry, monitor_geometry, window);
++                    }
+                     false
+                 });
+             }
+diff --git a/crates/eww/src/client.rs b/crates/eww/src/client.rs
+index 616c387..b716fde 100644
+--- a/crates/eww/src/client.rs
++++ b/crates/eww/src/client.rs
+@@ -37,7 +37,7 @@ pub fn do_server_call(stream: &mut UnixStream, action: &opts::ActionWithServer)
+     stream.write_all(&message_bytes).context("Failed to write command to IPC stream")?;
+ 
+     let mut buf = Vec::new();
+-    stream.set_read_timeout(Some(std::time::Duration::from_millis(100))).context("Failed to set read timeout")?;
++    stream.set_read_timeout(Some(std::time::Duration::from_secs(3))).context("Failed to set read timeout")?;
+     stream.read_to_end(&mut buf).context("Error reading response from server")?;
+ 
+     Ok(if buf.is_empty() {
+diff --git a/crates/eww/src/ipc_server.rs b/crates/eww/src/ipc_server.rs
+index 7630f00..af42d00 100644
+--- a/crates/eww/src/ipc_server.rs
++++ b/crates/eww/src/ipc_server.rs
+@@ -39,7 +39,7 @@ async fn handle_connection(mut stream: tokio::net::UnixStream, evt_send: Unbound
+ 
+     if let Some(mut response_recv) = maybe_response_recv {
+         log::debug!("Waiting for response for IPC client");
+-        if let Ok(Some(response)) = tokio::time::timeout(Duration::from_millis(100), response_recv.recv()).await {
++        if let Ok(Some(response)) = tokio::time::timeout(Duration::from_secs(2), response_recv.recv()).await {
+             let response = bincode::serialize(&response)?;
+             let result = &stream_write.write_all(&response).await;
+             crate::print_result_err!("sending text response to ipc client", &result);
+diff --git a/crates/eww/src/main.rs b/crates/eww/src/main.rs
+index 853a8fb..06347e6 100644
+--- a/crates/eww/src/main.rs
++++ b/crates/eww/src/main.rs
+@@ -20,6 +20,7 @@ mod client;
+ mod config;
+ mod daemon_response;
+ mod display_backend;
++mod draggable;
+ mod error_handling_ctx;
+ mod file_database;
+ mod geometry;
+diff --git a/crates/eww/src/widgets/widget_definitions.rs b/crates/eww/src/widgets/widget_definitions.rs
+index 8284d0f..02c4f05 100644
+--- a/crates/eww/src/widgets/widget_definitions.rs
++++ b/crates/eww/src/widgets/widget_definitions.rs
+@@ -829,6 +829,19 @@ fn build_gtk_event_box(bargs: &mut BuilderArgs) -> Result<gtk::EventBox> {
+     });
+ 
+     def_widget!(bargs, _g, gtk_widget, {
++        // Local extension: a native drag handle for a desktop widget window.
++        prop(drag_window: as_bool = false, drag_grid: as_i32 = 16) {
++            if drag_window {
++                crate::draggable::install(&gtk_widget, drag_grid);
++            }
++        },
++        // Local extension: resize this desktop widget from a corner grip.
++        prop(resize_window: as_bool = false, resize_grid: as_i32 = 16,
++             resize_min_width: as_i32 = 192, resize_min_height: as_i32 = 96, resize_axis: as_string = "both") {
++            if resize_window {
++                crate::draggable::install_resize(&gtk_widget, resize_grid, resize_min_width, resize_min_height, &resize_axis);
++            }
++        },
+         // @prop timeout - timeout of the command. Default: "200ms"
+         // @prop onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
+         prop(timeout: as_duration = Duration::from_millis(200), onscroll: as_string) {
+diff --git a/crates/eww/src/draggable.rs b/crates/eww/src/draggable.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/eww/src/draggable.rs
+@@ -0,0 +1,297 @@
++//! Native X11 desktop-widget movement and resizing in GDK logical coordinates.
++use gtk::{gdk, glib, prelude::*};
++use serde::{Deserialize, Serialize};
++use std::{cell::RefCell, collections::BTreeMap, rc::Rc, time::Duration};
++
++const MOVABLE: &str = "eww-native-draggable";
++const FILE: &str = "positions.json";
++
++#[derive(Clone, Copy, Serialize, Deserialize)]
++struct Position {
++    x: i32,
++    y: i32,
++}
++
++#[derive(Clone, Copy, Serialize, Deserialize)]
++struct Placement {
++    x: i32,
++    y: i32,
++    #[serde(default)]
++    width: Option<i32>,
++    #[serde(default)]
++    height: Option<i32>,
++}
++
++pub fn is_movable(window: &impl IsA<gtk::Window>) -> bool {
++    let window: &gtk::Window = window.as_ref();
++    unsafe { window.data::<bool>(MOVABLE).is_some() }
++}
++
++fn position(window: &gtk::Window) -> Position {
++    let (_, x, y) = window.window().unwrap().origin();
++    Position { x, y }
++}
++
++fn bounded(window: &gtk::Window, target: Position) -> Position {
++    let Some(display) = gdk::Display::default() else { return target };
++    let (width, height) = window.size();
++    let Some(monitor) =
++        display.monitor_at_point(target.x + width / 2, target.y + height / 2).or_else(|| display.primary_monitor())
++    else {
++        return target;
++    };
++    let area = monitor.workarea();
++    let left = area.x() + 8;
++    let top = area.y() + 8;
++    Position {
++        x: target.x.clamp(left, (area.x() + area.width() - width - 8).max(left)),
++        y: target.y.clamp(top, (area.y() + area.height() - height - 8).max(top)),
++    }
++}
++
++fn move_to(window: &gtk::Window, target: Position) {
++    let target = bounded(window, target);
++    let current = position(window);
++    if (current.x, current.y) != (target.x, target.y) {
++        if let Some(gdk_window) = window.window() {
++            gdk_window.move_(target.x, target.y);
++        }
++    }
++}
++
++fn snap(window: &gtk::Window, target: Position, grid: i32) -> Position {
++    let target = bounded(window, target);
++    if grid <= 1 {
++        return target;
++    }
++    let Some(display) = gdk::Display::default() else { return target };
++    let (width, height) = window.size();
++    let Some(monitor) = display.monitor_at_point(target.x + width / 2, target.y + height / 2) else { return target };
++    let area = monitor.workarea();
++    let axis = |value: i32, origin: i32, available: i32| {
++        let steps = ((value - origin) as f64 / grid as f64).round() as i32;
++        origin + steps.clamp(0, available.max(0) / grid) * grid
++    };
++    Position {
++        x: axis(target.x, area.x() + 8, area.width() - width - 16),
++        y: axis(target.y, area.y() + 8, area.height() - height - 16),
++    }
++}
++
++fn read_positions() -> BTreeMap<String, Placement> {
++    std::fs::read(FILE).ok().and_then(|bytes| serde_json::from_slice(&bytes).ok()).unwrap_or_default()
++}
++
++fn save(window: &gtk::Window) {
++    let mut positions = read_positions();
++    let key = window.title().unwrap_or_default().to_string();
++    let p = bounded(window, position(window));
++    let (width, height) = window.size();
++    positions.insert(key, Placement { x: p.x, y: p.y, width: Some(width), height: Some(height) });
++    let result = (|| -> anyhow::Result<()> {
++        std::fs::write("positions.json.tmp", serde_json::to_vec_pretty(&positions)?)?;
++        std::fs::rename("positions.json.tmp", FILE)?;
++        Ok(())
++    })();
++    if let Err(error) = result {
++        log::warn!("Could not save widget position: {error:#}");
++    }
++}
++
++fn top(widget: &gtk::EventBox) -> Option<gtk::Window> {
++    widget.toplevel()?.downcast::<gtk::Window>().ok()
++}
++
++fn initialize_handle(handle: &gtk::EventBox) {
++    let mut child: gtk::Widget = handle.clone().upcast();
++    while let Some(parent) = child.parent() {
++        if let Ok(overlay) = parent.clone().downcast::<gtk::Overlay>() {
++            overlay.set_overlay_pass_through(&child, false);
++            break;
++        }
++        child = parent;
++    }
++    let Some(window) = top(handle) else { return };
++    if is_movable(&window) {
++        return;
++    }
++    unsafe {
++        window.set_data(MOVABLE, true);
++    }
++    window.set_gravity(gdk::Gravity::NorthWest);
++    // Reapply after responsive content has reacted to the restored width.
++    for delay in [180, 500, 900] {
++        let weak = window.downgrade();
++        glib::timeout_add_local_once(Duration::from_millis(delay), move || {
++            if let Some(window) = weak.upgrade() {
++                let saved = read_positions().get(window.title().unwrap_or_default().as_str()).copied();
++                if let Some(saved) = saved {
++                    if let (Some(width), Some(height)) = (saved.width, saved.height) {
++                        if width > 0 && height > 0 {
++                            let display = gdk::Display::default().unwrap();
++                            if let Some(monitor) = display.monitor_at_point(saved.x, saved.y) {
++                                let area = monitor.workarea();
++                                window.resize(width.min(area.width() - 16).max(1), height.min(area.height() - 16).max(1));
++                            }
++                        }
++                    }
++                    move_to(&window, Position { x: saved.x, y: saved.y });
++                } else {
++                    move_to(&window, position(&window));
++                }
++            }
++        });
++    }
++    // Correct placement when a monitor is disconnected or scaling changes.
++    if let Some(screen) = gtk::prelude::GtkWindowExt::screen(&window) {
++        let weak = window.downgrade();
++        let signal = screen.connect_monitors_changed(move |_| {
++            let weak = weak.clone();
++            glib::timeout_add_local_once(Duration::from_millis(300), move || {
++                if let Some(window) = weak.upgrade() {
++                    move_to(&window, position(&window));
++                    save(&window);
++                }
++            });
++        });
++        let signal = RefCell::new(Some(signal));
++        window.connect_destroy(move |_| {
++            if let Some(signal) = signal.borrow_mut().take() {
++                screen.disconnect(signal);
++            }
++        });
++    }
++    // Content can grow after a font/theme change; keep the whole card visible.
++    window.connect_size_allocate(|window, _| {
++        let weak = window.downgrade();
++        glib::idle_add_local_once(move || {
++            if let Some(window) = weak.upgrade() {
++                if window.is_mapped() {
++                    move_to(&window, position(&window));
++                }
++            }
++        });
++    });
++}
++
++pub fn install(handle: &gtk::EventBox, grid: i32) {
++    let drag: Rc<RefCell<Option<(f64, f64)>>> = Rc::new(RefCell::new(None));
++    handle.add_events(
++        gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK | gdk::EventMask::POINTER_MOTION_MASK,
++    );
++
++    handle.connect_map(initialize_handle);
++
++    handle.connect_button_press_event(glib::clone!(@strong drag => move |handle, event| {
++        if event.button() != 1 { return glib::Propagation::Proceed }
++        if let Some(window) = top(handle) {
++            let p = position(&window);
++            let (x, y) = event.root();
++            *drag.borrow_mut() = Some((x - p.x as f64, y - p.y as f64));
++            handle.grab_add();
++            return glib::Propagation::Stop;
++        }
++        glib::Propagation::Proceed
++    }));
++    handle.connect_motion_notify_event(glib::clone!(@strong drag => move |handle, event| {
++        if let Some((dx, dy)) = *drag.borrow() {
++            if let Some(window) = top(handle) {
++                let (x, y) = event.root();
++                move_to(&window, snap(&window, Position { x: (x - dx).round() as i32, y: (y - dy).round() as i32 }, grid));
++            }
++            return glib::Propagation::Stop;
++        }
++        glib::Propagation::Proceed
++    }));
++    handle.connect_button_release_event(glib::clone!(@strong drag => move |handle, event| {
++        if event.button() == 1 && drag.borrow_mut().take().is_some() {
++            handle.grab_remove();
++            if let Some(window) = top(handle) {
++                move_to(&window, snap(&window, position(&window), grid));
++                save(&window);
++            }
++            return glib::Propagation::Stop;
++        }
++        glib::Propagation::Proceed
++    }));
++    handle.connect_grab_broken_event(move |handle, _| {
++        *drag.borrow_mut() = None;
++        handle.grab_remove();
++        glib::Propagation::Proceed
++    });
++}
++
++fn resize_to(window: &gtk::Window, width: i32, height: i32, grid: i32, min_width: i32, min_height: i32) {
++    let p = position(window);
++    let Some(display) = gdk::Display::default() else { return };
++    let Some(monitor) = display.monitor_at_point(p.x, p.y) else { return };
++    let area = monitor.workarea();
++    let grid = grid.max(1);
++    let dimension = |value: i32, minimum: i32, maximum: i32| {
++        let min_steps = (minimum + grid - 1) / grid;
++        let max_steps = (maximum / grid).max(min_steps);
++        (((value as f64 / grid as f64).round() as i32).clamp(min_steps, max_steps)) * grid
++    };
++    let width = dimension(width, min_width, area.x() + area.width() - p.x - 8);
++    let height = dimension(height, min_height, area.y() + area.height() - p.y - 8);
++    window.resize(width, height);
++}
++
++pub fn install_resize(handle: &gtk::EventBox, grid: i32, min_width: i32, min_height: i32, axis: &str) {
++    let horizontal_only = axis == "horizontal";
++    let vertical_only = axis == "vertical";
++    let resizing: Rc<RefCell<Option<(f64, f64, i32, i32)>>> = Rc::new(RefCell::new(None));
++    handle.add_events(
++        gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK | gdk::EventMask::POINTER_MOTION_MASK,
++    );
++    handle.connect_map(move |handle| {
++        initialize_handle(handle);
++        if let Some(window) = top(handle) {
++            window.set_resizable(true);
++            window.set_size_request(min_width.max(1), min_height.max(1));
++        }
++    });
++    handle.connect_button_press_event(glib::clone!(@strong resizing => move |handle, event| {
++        if event.button() != 1 { return glib::Propagation::Proceed }
++        if let Some(window) = top(handle) {
++            let (x, y) = event.root();
++            let (width, height) = window.size();
++            *resizing.borrow_mut() = Some((x, y, width, height));
++            handle.grab_add();
++            return glib::Propagation::Stop;
++        }
++        glib::Propagation::Proceed
++    }));
++    handle.connect_motion_notify_event(glib::clone!(@strong resizing => move |handle, event| {
++        if let Some((start_x, start_y, width, height)) = *resizing.borrow() {
++            if let Some(window) = top(handle) {
++                let (x, y) = event.root();
++                resize_to(&window, if vertical_only { window.size().0 } else { width + (x - start_x).round() as i32 },
++                    if horizontal_only { window.size().1 } else { height + (y - start_y).round() as i32 }, grid, min_width, min_height);
++            }
++            return glib::Propagation::Stop;
++        }
++        glib::Propagation::Proceed
++    }));
++    handle.connect_button_release_event(glib::clone!(@strong resizing => move |handle, event| {
++        if event.button() == 1 && resizing.borrow_mut().take().is_some() {
++            handle.grab_remove();
++            if let Some(window) = top(handle) {
++                let weak = window.downgrade();
++                glib::timeout_add_local_once(Duration::from_millis(120), move || {
++                    if let Some(window) = weak.upgrade() {
++                        move_to(&window, position(&window));
++                        save(&window);
++                    }
++                });
++            }
++            return glib::Propagation::Stop;
++        }
++        glib::Propagation::Proceed
++    }));
++    handle.connect_grab_broken_event(move |handle, _| {
++        *resizing.borrow_mut() = None;
++        handle.grab_remove();
++        glib::Propagation::Proceed
++    });
++}

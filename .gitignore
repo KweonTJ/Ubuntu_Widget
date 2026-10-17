@@ -1,0 +1,27 @@
+# Local builds and packaging
+.build/
+build/
+dist/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# Credentials, user data, local exports
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+*.lock
+!Cargo.lock
+*.tar.gz
+*.mp4
+*.webm
+*.xwd
+# Runtime state belongs in XDG_CONFIG_HOME, never in this repository
+config/glass-compositor-state.json
+config/connections-auth.lock
+config/widget-state.lock
+config/positions.backup-*.json

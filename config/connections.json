@@ -1,0 +1,21 @@
+{
+  "stocks": {
+    "connected": false,
+    "symbols": [],
+    "indices": []
+  },
+  "weather": {
+    "connected": false,
+    "city": "",
+    "latitude": 0,
+    "longitude": 0
+  },
+  "home": {
+    "connected": false,
+    "url": "",
+    "entities": []
+  },
+  "screentime": {
+    "enabled": false
+  }
+}

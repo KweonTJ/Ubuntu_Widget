@@ -1,0 +1,64 @@
+/* Dark palette. Selected automatically by scripts/theme.py. */
+label { color: #edf0f8; }
+.card {
+  background: rgba(34, 36, 45, 0.96);
+  border-color: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.28);
+}
+.clock-card { background: linear-gradient(135deg, rgba(38, 54, 81, 0.98), rgba(57, 44, 76, 0.97)); }
+.eyebrow { color: #b1c7f1; }
+.clock-time { color: #f0f4ff; }
+.clock-date { color: #d0dcf5; }
+.clock-zone { color: #9eacc7; }
+.calendar-title { color: #ff8c99; }
+.weekdays label { color: #a3a5b5; }
+.day.weekend { color: #b2afc3; }
+.day.outside { color: #686977; }
+.day.today { color: #ffffff; background: #ce5e75; }
+.card-heading .live { color: #82cfad; }
+.meter-name { color: #b1b4c4; }
+.meter-detail { color: #a0a3b5; }
+progressbar trough { background: rgba(200, 204, 230, 0.14); }
+.music-card { background: linear-gradient(120deg, rgba(54, 36, 49, 0.98), rgba(43, 37, 59, 0.97)); }
+.music-status { color: #dda0bb; }
+.music-artist { color: #b6a9c3; }
+.play-button { background: rgba(184, 164, 211, 0.19); }
+.transport-button:hover, .play-button:hover { background: rgba(184, 164, 211, 0.32); }
+.battery-card { background: linear-gradient(130deg, rgba(31, 51, 42, 0.98), rgba(31, 46, 42, 0.97)); }
+.small-detail { color: #a8b0c0; }
+.battery-card .small-detail { color: #9ec5b3; }
+.sound-controls button { background: rgba(167, 179, 211, 0.16); }
+.sound-controls button label { color: #d5def3; }
+.sound-controls button:hover { background: rgba(167, 179, 211, 0.30); }
+.corner-grip { background: rgba(207, 197, 228, 0.10); }
+.corner-grip:hover { background: rgba(207, 197, 228, 0.25); }
+.corner-grip:active { background: rgba(207, 197, 228, 0.38); }
+.close-widget label { color: #aaa5b8; }
+.close-widget:hover label { color: #ff98aa; }
+.width-grip label { color: #aaa5b8; }
+.corner-grip, .corner-grip:hover, .corner-grip:active { background: transparent; }
+.battery-ring { color: #63e778; background-color: rgba(185, 220, 196, 0.15); }
+.battery-ring.low { color: #ffc05a; }
+.battery-ring.unknown { color: transparent; }
+.battery-ring-value { color: #eef6ef; }
+.battery-ring-value.low { color: #ffc05a; }
+.battery-device-name { color: #c3dfd1; }
+.battery-device-detail { color: #95b4a2; }
+
+.web-card { background: linear-gradient(130deg, #302c40, #292e40); }
+.web-title { color: #f0ecff; }
+.web-host { color: #aaa2bf; }
+.web-open-label { color: #c0afe8; }
+
+.extra-blue { background: linear-gradient(130deg, #293750, #323047); }
+.extra-yellow { background: linear-gradient(130deg, #45402e, #493830); }
+.extra-green { background: linear-gradient(130deg, #273d37, #29394b); }
+.extra-heading { color: #bccbea; }
+.extra-detail { color: #a9b5c8; }
+.extra-value, .extra-city, .extra-world-time, .extra-network, .extra-note-title, .extra-note, .extra-task label, .extra-button label { color: #eef1f7; }
+.extra-button { background: rgba(197, 209, 234, .12); }
+.extra-button:hover, .extra-task:hover { background: rgba(197, 209, 234, .22); }
+
+.extra-pink { background: linear-gradient(130deg, #453247, #34304a); }
+.extra-purple { background: linear-gradient(130deg, #38324b, #2c354b); }
+.extra-neutral { background: linear-gradient(130deg, #303641, #262e3d); }

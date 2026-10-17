@@ -1,0 +1,199 @@
+(deflisten services :initial "{\"tracking\": false, \"clock\": \"\", \"clock_time\": \"\", \"screen\": {\"tracking\": false, \"total\": \"0분\", \"rows\": [], \"status\": \"기록 꺼짐\"}, \"weather\": {\"status\": \"설정에서 연결해 주세요.\", \"last_update\": \"\", \"rows\": [], \"hours\": [], \"week\": [], \"city\": \"지역을 선택하세요\", \"temperature\": \"—\", \"condition\": \"\", \"range\": \"\", \"air\": \"\"}, \"stocks\": {\"status\": \"설정에서 연결해 주세요.\", \"last_update\": \"\", \"rows\": [], \"hours\": [], \"week\": [], \"city\": \"지역을 선택하세요\", \"temperature\": \"—\", \"condition\": \"\", \"range\": \"\", \"air\": \"\"}, \"home\": {\"status\": \"설정에서 연결해 주세요.\", \"last_update\": \"\", \"rows\": [], \"hours\": [], \"week\": [], \"city\": \"지역을 선택하세요\", \"temperature\": \"—\", \"condition\": \"\", \"range\": \"\", \"air\": \"\"}}" `./scripts/integration_runtime.py`)
+(deflisten glass :initial "{\"enabled\": false, \"overrides\": {}}" `./scripts/glass_windows.py`)
+(deflisten extra :initial "{\"world\": [], \"today\": \"—\", \"month\": \"\", \"weekday\": \"\", \"week\": \"\", \"day_percent\": 0, \"day_left\": \"\", \"year\": \"\", \"year_percent\": 0, \"year_left\": \"\", \"uptime\": \"—\", \"uptime_detail\": \"\", \"download\": \"—\", \"upload\": \"—\", \"note_title\": \"Note\", \"note_text\": \"\", \"tasks\": [], \"tasks_count\": \"0 / 0\", \"tasks_empty\": true, \"countdown_title\": \"\", \"countdown_date\": \"\", \"countdown_value\": \"—\", \"focus_time\": \"25:00\", \"focus_button\": \"Start\", \"focus_detail\": \"\", \"focus_percent\": 0, \"agenda\": [], \"agenda_empty\": true}" `./scripts/library_data.py`)
+(deflisten webitems :initial "{}" `./scripts/web-data.py`)
+(deflisten sizes :initial "{\"clock\": {\"width\": 320, \"height\": 224}, \"calendar\": {\"width\": 320, \"height\": 224}, \"system\": {\"width\": 320, \"height\": 224}, \"music\": {\"width\": 320, \"height\": 224}, \"battery\": {\"width\": 320, \"height\": 224}, \"sound\": {\"width\": 320, \"height\": 224}, \"worldclock\": {\"width\": 320, \"height\": 224}, \"today\": {\"width\": 320, \"height\": 224}, \"dayprogress\": {\"width\": 320, \"height\": 224}, \"yearprogress\": {\"width\": 320, \"height\": 224}, \"countdown\": {\"width\": 320, \"height\": 224}, \"note\": {\"width\": 320, \"height\": 224}, \"todo\": {\"width\": 320, \"height\": 224}, \"focus\": {\"width\": 320, \"height\": 224}, \"cpu\": {\"width\": 320, \"height\": 224}, \"memory\": {\"width\": 320, \"height\": 224}, \"disk\": {\"width\": 320, \"height\": 224}, \"network\": {\"width\": 320, \"height\": 224}, \"uptime\": {\"width\": 320, \"height\": 224}, \"weather\": {\"width\": 320, \"height\": 224}, \"analog\": {\"width\": 320, \"height\": 224}, \"agenda\": {\"width\": 320, \"height\": 224}, \"stocks\": {\"width\": 320, \"height\": 224}, \"screentime\": {\"width\": 320, \"height\": 224}, \"home\": {\"width\": 320, \"height\": 224}, \"podcast\": {\"width\": 320, \"height\": 224}}" `./scripts/layout.py`)
+(deflisten appearance :initial "light" `./scripts/theme.py`)
+(deflisten info :initial "{\"time\": \"--:--\", \"date\": \"\", \"zone\": \"Local time\", \"zone_detail\": \"System timezone\", \"calendar\": {\"month\": \"\", \"weeks\": []}, \"cpu\": 0, \"memory\": 0, \"memory_text\": \"\", \"disk\": 0, \"disk_text\": \"\", \"battery\": {\"value\": 0, \"label\": \"—\", \"detail\": \"\", \"available\": false}, \"sound\": {\"value\": 0, \"muted\": false, \"label\": \"—\", \"available\": false}, \"music\": {\"title\": \"No media playing\", \"artist\": \"\", \"status\": \"Media\", \"playing\": false, \"available\": false, \"can_play\": false, \"can_previous\": false, \"can_next\": false}, \"bluetooth\": {\"available\": false, \"powered\": false, \"count\": 0, \"devices\": [], \"empty\": \"No connected devices\"}}" `./scripts/data.py`)
+
+(defwidget clock-card []
+  (box :class {"card clock-card glass-uw-clock " + (sizes.clock.height < 160 ? "compact" : "")} :orientation "v" :vexpand true :space-evenly false
+    (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
+      (box :orientation "v" :space-evenly false :hexpand true :vexpand true
+        (box :visible {sizes.clock.height >= 128} :space-evenly false
+      (image :path {appearance == "dark" ? "assets/location-dark.svg" : "assets/location.svg"} :image-width 13 :image-height 13)
+      (label :class "eyebrow" :text {info.zone ?: "Local time"} :xalign 0 :hexpand true))
+    (label :class "clock-time" :style {sizes.clock.height < 160 ? "font-size: 28px;" : "font-size: 46px;"} :text {info.time ?: "--:--"} :xalign 0 :vexpand true)
+    (label :visible {sizes.clock.height >= 128} :class "clock-date" :text {info.date ?: ""} :xalign 0)
+    (label :visible {sizes.clock.height >= 160} :class "clock-zone" :text {info.zone_detail ?: "System timezone"} :xalign 0)))))
+
+(defwidget calendar-card []
+  (box :class {"card calendar-card glass-uw-calendar " + (sizes.calendar.height < 160 ? "compact" : "")} :orientation "v" :vexpand true :space-evenly false
+    (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
+      (box :orientation "v" :space-evenly false :hexpand true :vexpand true
+        (label :class "calendar-title" :text {info.calendar.month ?: "달력"} :xalign 0)
+    (box :class "weekdays" :space-evenly true
+      (label :text "일") (label :text "월") (label :text "화") (label :text "수")
+      (label :text "목") (label :text "금") (label :text "토"))
+    (box :class "calendar-grid" :orientation "v" :space-evenly true :vexpand true
+      (for week in {info.calendar.weeks ?: "[]"}
+        (box :space-evenly true
+          (for day in week
+            (label :class {day.class} :text {day.label})))))))))
+
+(defwidget meter [name value detail class]
+  (box :class "meter ${class}" :orientation "v" :space-evenly false :hexpand true
+    (label :class "meter-name" :text name :xalign 0)
+    (label :class "meter-value" :style {sizes.system.height < 160 ? "font-size: 18px;" : "font-size: 24px;"} :text "${value}%" :xalign 0)
+    (progress :value value)
+    (label :visible {sizes.system.height >= 144} :class "meter-detail" :text detail :xalign 0)))
+
+(defwidget system-card []
+  (box :class {"card system-card glass-uw-system " + (sizes.system.width < 320 ? "narrow " : "wide ") + (sizes.system.height < 160 ? "compact" : "")} :orientation "v" :vexpand true :space-evenly false
+    (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
+      (box :orientation "v" :space-evenly false :hexpand true :vexpand true
+        (box :class "card-heading" :space-evenly false
+      (image :path {appearance == "dark" ? "assets/computer-dark.svg" : "assets/computer.svg"} :image-width 15 :image-height 15)
+      (label :text "시스템" :xalign 0 :hexpand true)
+      (label :class "live" :text "●  LIVE"))
+    (box :space-evenly true :vexpand true :valign "center" :spacing 12
+      :orientation {sizes.system.width < 320 ? "v" : "h"}
+      (meter :name "CPU" :value {info.cpu ?: 0} :detail "프로세서" :class "cpu")
+      (meter :name "메모리" :value {info.memory ?: 0} :detail {info.memory_text ?: ""} :class "memory")
+      (meter :name "저장공간" :value {info.disk ?: 0} :detail {info.disk_text ?: ""} :class "disk"))))))
+
+(defwidget music-card []
+  (box :class {"card music-card glass-uw-music " + (sizes.music.width < 320 ? "narrow " : "wide ") + (sizes.music.height < 160 ? "compact" : "")} :orientation "v" :vexpand true :space-evenly false
+    (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
+      (box :orientation "v" :space-evenly false :hexpand true :vexpand true
+        (box :space-evenly false :spacing 14 :vexpand true :valign "center"
+      :orientation {sizes.music.width < 320 ? "v" : "h"}
+      (image :halign "center" :path "assets/music.svg" :image-width 60 :image-height 60)
+      (box :orientation "v" :space-evenly false :hexpand true :valign "center" :spacing 4
+        (label :class "music-status" :text {info.music.status ?: "음악"} :xalign 0)
+        (label :class "music-title" :text {info.music.title ?: "재생 중인 음악 없음"} :xalign 0 :limit-width 16 :truncate true)
+        (label :visible {sizes.music.height >= 144} :class "music-artist" :text {info.music.artist ?: ""} :xalign 0 :limit-width 20 :truncate true)))
+    (box :class "transport" :space-evenly false :halign "center" :spacing 16
+      (button :class "transport-button" :active {info.music.can_previous ?: false} :tooltip "이전 곡"
+        :onclick "./scripts/data.py action previous"
+        (image :path {appearance == "dark" ? "assets/previous-dark.svg" : "assets/previous.svg"} :image-width 18 :image-height 18))
+      (button :class "play-button" :active {info.music.can_play ?: false} :tooltip "재생 / 일시 정지"
+        :onclick "./scripts/data.py action play"
+        (image :path {"assets/" + (info.music.playing ? "pause" : "play") + (appearance == "dark" ? "-dark.svg" : ".svg")} :image-width 18 :image-height 18))
+      (button :class "transport-button" :active {info.music.can_next ?: false} :tooltip "다음 곡"
+        :onclick "./scripts/data.py action next"
+        (image :path {appearance == "dark" ? "assets/next-dark.svg" : "assets/next.svg"} :image-width 18 :image-height 18)))))))
+
+(defwidget battery-device [name value known text icon detail low]
+  (box :class "battery-device" :orientation {sizes.battery.height < 160 ? "h" : "v"}
+    :space-evenly false :spacing 7 :halign "center" :valign "center"
+    :tooltip {name + " · " + text + (detail == "" ? "" : " · " + detail)}
+    (circular-progress :class {"battery-ring " + (!known ? "unknown" : (low ? "low" : ""))}
+      :value {known ? value : 0} :start-at 75 :clockwise true
+      :thickness {sizes.battery.height < 160 ? 4 : 6}
+      :width {sizes.battery.height < 160 ? 44 : 68}
+      :height {sizes.battery.height < 160 ? 44 : 68}
+      :halign "center" :valign "center"
+      (image :path {"assets/battery-" + icon + (appearance == "dark" ? "-dark.svg" : ".svg")}
+        :image-width {sizes.battery.height < 160 ? 22 : 34}
+        :image-height {sizes.battery.height < 160 ? 22 : 34}))
+    (box :orientation "v" :space-evenly false :spacing 2 :valign "center"
+      (label :class {"battery-ring-value " + (low ? "low" : "")}
+        :style {sizes.battery.height < 160 ? "font-family: sans-serif; font-size: 16px; font-weight: 600;" : "font-family: sans-serif; font-size: 20px; font-weight: 600;"}
+        :text {known ? text : "—"})
+      (label :class "battery-device-name" :text name :truncate true :limit-width 14)
+      (label :class "battery-device-detail" :visible {sizes.battery.height >= 208}
+        :text {known ? detail : "잔량 정보 없음"} :truncate true :limit-width 19))))
+
+(defwidget battery-card []
+  (box :class {"card battery-card glass-uw-battery " + (sizes.battery.height < 160 ? "compact" : "")}
+    :orientation "v" :space-evenly false :vexpand true
+    (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
+      (box :class "battery-devices" :space-evenly true :spacing 14
+        :orientation {sizes.battery.width < 264 || ((info.bluetooth.count ?: 0) + 1) * 112 + 40 > sizes.battery.width ? "v" : "h"}
+        :hexpand true :vexpand true :valign "center"
+        (battery-device :name "이 PC" :value {info.battery.value ?: 0}
+          :known {info.battery.available ?: false} :text {info.battery.label ?: "—"}
+          :icon "laptop" :detail {info.battery.detail ?: ""}
+          :low {(info.battery.available ?: false) && (info.battery.value ?: 0) <= 20})
+        (for device in {info.bluetooth.devices ?: "[]"}
+          (battery-device :name {device.name} :value {device.value} :known {device.known}
+            :text {device.label} :icon {device.icon ?: "bluetooth"}
+            :detail {device.known ? "연결됨" : "잔량 정보 없음"} :low {device.low}))))))
+
+(defwidget sound-card []
+  (box :class {"card sound-card glass-uw-sound " + (sizes.sound.width < 240 ? "narrow " : "wide ") + (sizes.sound.height < 160 ? "compact" : "")}
+    :orientation "v" :space-evenly false :vexpand true
+    (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
+      (box :orientation "v" :space-evenly false :hexpand true :vexpand true
+        (label :visible {sizes.sound.height >= 128} :class "small-heading" :text "사운드" :xalign 0)
+    (label :class "sound-value" :style {sizes.sound.height < 160 ? "font-size: 22px;" : "font-size: 30px;"} :text {info.sound.label ?: "--"} :xalign 0 :vexpand true)
+    (box :class "sound-controls" :space-evenly true :spacing 8
+      :orientation {sizes.sound.width < 240 ? "v" : "h"}
+      (button :active {info.sound.available ?: false} :tooltip "볼륨 5% 줄이기" :onclick "./scripts/data.py action quieter" (label :text "−"))
+      (button :active {info.sound.available ?: false} :tooltip "음소거 전환" :onclick "./scripts/data.py action mute"
+        (image :path {"assets/" + (info.sound.muted ? "muted" : "sound") + (appearance == "dark" ? "-dark.svg" : ".svg")} :image-width 17 :image-height 17))
+      (button :active {info.sound.available ?: false} :tooltip "볼륨 5% 높이기" :onclick "./scripts/data.py action louder" (label :text "+")))))))
+
+(defwidget movable-card [name theme]
+  (box :class {(theme == "dark" ? "movable-canvas eww-dark" : "movable-canvas eww-light") + " widget-" + name + (glass.enabled ? " glass-master-on" : "") + (services.tracking ? " usage-recording" : "")} :orientation "v" :space-evenly false
+    (overlay :hexpand true :vexpand true
+      (eventbox :onrightclick "./scripts/manager-launch.py menu ${name}" :timeout "2s"
+        (box :orientation "v" :space-evenly false :vexpand true (children)))
+      (box :class "corner-tools" :space-evenly false :hexpand true :valign "start"
+        (button :class "close-widget" :tooltip "위젯 지우기 · 앱 메뉴에서 복원 가능"
+          :onclick "./scripts/windows.py remove ${name}"
+          (label :text "×"))
+        (box :hexpand true)
+        (eventbox :drag-window true :drag-grid 16 :cursor "grab"
+          :tooltip "이동 · 16px 격자에 맞춤"
+          (box :class "corner-grip")))
+      (eventbox :resize-window true :resize-axis "horizontal" :resize-grid 16
+        :resize-min-width 192 :resize-min-height 96 :cursor "ew-resize"
+        :halign "end" :valign "fill" :tooltip "좌우로 드래그해서 가로폭 조절"
+        (box :class "width-grip" :vexpand true))
+      (eventbox :resize-window true :resize-grid 16 :resize-min-width 192 :resize-min-height 96
+        :cursor "se-resize" :halign "end" :valign "end" :tooltip "드래그해서 가로·세로 크기 조절"
+        (box :class "resize-grip")))))
+
+(defwindow uw-clock
+  :monitor '["<primary>", 0]'
+  :geometry (geometry :anchor "top right" :x "-368px" :y "51px" :width "320px" :height "224px")
+  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+  (movable-card :theme appearance :name "uw-clock" (clock-card)))
+
+(defwindow uw-calendar
+  :monitor '["<primary>", 0]'
+  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
+  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+  (movable-card :theme appearance :name "uw-calendar" (calendar-card)))
+
+(defwindow uw-system
+  :monitor '["<primary>", 0]'
+  :geometry (geometry :anchor "top right" :x "-368px" :y "291px" :width "320px" :height "224px")
+  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+  (movable-card :theme appearance :name "uw-system" (system-card)))
+
+(defwindow uw-music
+  :monitor '["<primary>", 0]'
+  :geometry (geometry :anchor "top right" :x "-32px" :y "291px" :width "320px" :height "224px")
+  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+  (movable-card :theme appearance :name "uw-music" (music-card)))
+
+(defwindow uw-battery
+  :monitor '["<primary>", 0]'
+  :geometry (geometry :anchor "top right" :x "-368px" :y "531px" :width "320px" :height "224px")
+  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+  (movable-card :theme appearance :name "uw-battery" (battery-card)))
+
+(defwindow uw-sound
+  :monitor '["<primary>", 0]'
+  :geometry (geometry :anchor "top right" :x "-32px" :y "531px" :width "320px" :height "224px")
+  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
+  (movable-card :theme appearance :name "uw-sound" (sound-card)))
+
+
+(defwidget web-card [id]
+  (box :class {"card web-card glass-" + id} :orientation "v" :space-evenly false :vexpand true
+    (scroll :class "content-scroll" :hscroll false :vscroll true :hexpand true :vexpand true
+      (button :class "web-open" :onclick "./scripts/widget-action.py launch ${id}" :timeout "3s"
+        :tooltip {webitems[id + "-host"] ?: "웹사이트 열기"}
+        (box :orientation "v" :space-evenly false :spacing 8 :valign "center" :hexpand true
+          (label :class "web-letter" :text {webitems[id + "-letter"] ?: "W"} :halign "center")
+          (label :class "web-title" :text {webitems[id + "-name"] ?: "웹사이트"} :truncate true :limit-width 22)
+          (label :class "web-host" :text {webitems[id + "-host"] ?: ""} :truncate true :limit-width 25)
+          (label :class "web-open-label" :text "웹앱 열기 ↗"))))))
+
+(include "web-windows.yuck")
+(include "library-widgets.yuck")
+(include "connected-widgets.yuck")

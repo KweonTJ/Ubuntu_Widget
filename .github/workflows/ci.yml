@@ -1,0 +1,30 @@
+name: Package checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  validate:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install Python and system bindings
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi python3-cairo python3-gi-cairo python3-dbus gir1.2-gtk-3.0 gir1.2-secret-1
+      - name: Verify Python, shell and blank defaults
+        run: |
+          /usr/bin/python3 -m compileall -q config/scripts scripts tests
+          bash -n install.sh bin/ubuntu-widget scripts/build-eww.sh config/scripts/run-daemon.sh config/scripts/run-gallery.sh
+          /usr/bin/python3 -m unittest discover -s tests -v
+          /usr/bin/python3 scripts/check_public.py
+          git diff --check
+      - name: Verify pinned upstream patch
+        run: |
+          git init /tmp/widget-upstream
+          git -C /tmp/widget-upstream remote add origin https://github.com/elkowar/eww.git
+          git -C /tmp/widget-upstream fetch --depth=1 origin 48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa
+          git -C /tmp/widget-upstream checkout --detach FETCH_HEAD
+          git -C /tmp/widget-upstream apply --check "$GITHUB_WORKSPACE/patches/eww-native-controls.patch"
