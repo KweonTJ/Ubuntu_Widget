@@ -5,7 +5,7 @@ const assert = require("node:assert/strict"),
 const asar = require("@electron/asar");
 const root = path.resolve(__dirname, ".."),
   archive = path.join(root, "dist/win-unpacked/resources/app.asar");
-const list = asar.listPackage(archive);
+const list = asar.listPackage(archive).map((name) => name.replace(/\\/g, "/"));
 for (const file of list) {
   assert(
     !/\/(?:\.smoke-profile|\.cache|\.web-profile|\.git|test|docs)\//.test(file),
