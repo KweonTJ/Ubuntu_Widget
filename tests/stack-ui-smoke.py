@@ -21,6 +21,18 @@ with tempfile.TemporaryDirectory(prefix='widget-stack-qa-') as tmp:
    if set(w)=={wid}:time.sleep(1.1);return windows()[wid]
    time.sleep(.1)
   raise AssertionError((wid,windows(),(Path(tmp)/'engine.log').read_text()[-2500:]))
+ def stable_switch(wid,before):
+  # Sample immediately through the former 0.9 s/1.4 s restore timers, not
+  # merely the final rectangle after those corrections have hidden a jump.
+  deadline=time.monotonic()+1.7;samples=0
+  while time.monotonic()<deadline:
+   observed=windows();assert len(observed)==1,observed
+   rect=next(iter(observed.values()))
+   assert rect==before,('Transient geometry or window replacement',before,observed)
+   samples+=1;time.sleep(.008)
+  assert wid in windows(),windows()
+  print('Stable switch:',wid,samples,'frames, one window, unchanged geometry.',flush=True)
+  return windows()[wid]
  try:
   for _ in range(30):
    try:cmd('ping');break
@@ -35,16 +47,26 @@ with tempfile.TemporaryDirectory(prefix='widget-stack-qa-') as tmp:
 
   # A real body drag moves the active stack member.
   drag((clock['x']+90,clock['y']+65),(clock['x']+154,clock['y']+113));time.sleep(.5);moved=windows()['uw-clock']
-  click(moved);calendar=wait_for('uw-calendar')
+  click(moved);calendar=stable_switch('uw-calendar',moved)
   assert (calendar['x'],calendar['y'],calendar['width'],calendar['height'])==(moved['x'],moved['y'],moved['width'],moved['height']),(calendar,moved)
   drag((calendar['x']+calendar['width']-12,calendar['y']+90),(calendar['x']+calendar['width']+52,calendar['y']+90));time.sleep(.5);wide=windows()['uw-calendar']
-  click(wide,button=4);clock=wait_for('uw-clock')
+  sizes=json.loads(cmd('get','sizes'))
+  assert (sizes['clock']['width'],sizes['clock']['height'])==(wide['width'],wide['height']),sizes['clock']
+  assert sizes['clock']==sizes['calendar'],'Inactive cards must inherit actual stack dimensions before switching'
+  click(wide,button=4);clock=stable_switch('uw-clock',wide)
   assert clock['width']==wide['width'] and clock['x']==wide['x'],(clock,wide)
+  # Error paths must leave the mapped host and active card untouched.
+  bad=subprocess.run([binary,'--config',str(config),'stack-switch','uw-clock','uw-missing','next'],env=env,cwd=config,capture_output=True)
+  assert bad.returncode!=0 and windows()['uw-clock']==clock
+  # Repeated forward/backward cycles preserve the XID even at compact size.
+  for direction,dest in [('next','uw-calendar'),('prev','uw-clock')]:
+   child=subprocess.Popen(['/usr/bin/python3',str(config/'scripts/stacks.py'),direction,'uw-clock'],env=env,cwd=config)
+   stable_switch(dest,clock);assert child.wait(timeout=5)==0
   cmd('close','uw-clock');store.open_visible();restored=wait_for('uw-clock');assert restored['width']==wide['width']
   stacks.dissolve('uw-clock');time.sleep(1.5);w=windows();assert set(w)=={'uw-clock','uw-calendar'},w
   for wid,r in w.items():
    assert all(r[k]==v for k,v in original['Eww - '+wid].items()),(wid,r,original)
-  print('Stack GUI passed: automatic drop, physical drag, click, resize, wheel, reopen and split.',flush=True)
+  print('Stack GUI passed: automatic drop, physical drag, click, resize, wheel, per-frame stability, failure, reopen and split.',flush=True)
  finally:
   cmd('kill');daemon.wait(timeout=5);log.close()
   errors=[l for l in (Path(tmp)/'engine.log').read_text().splitlines() if 'ERROR' in l or 'error:' in l or 'Traceback' in l]

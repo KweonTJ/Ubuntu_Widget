@@ -3,7 +3,6 @@
 import ctypes as C
 import ctypes.util
 import json
-import time
 from pathlib import Path
 import gi
 gi.require_version('Gdk', '3.0')
@@ -23,10 +22,8 @@ bind('XInternAtom', U, [P,C.c_char_p,I])
 bind('XGetWindowProperty', I, [P,U,U,C.c_long,C.c_long,I,U,C.POINTER(U),C.POINTER(I),C.POINTER(U),C.POINTER(U),C.POINTER(P)])
 bind('XGetGeometry', I, [P,U,C.POINTER(U),C.POINTER(I),C.POINTER(I),C.POINTER(C.c_uint),C.POINTER(C.c_uint),C.POINTER(C.c_uint),C.POINTER(C.c_uint)])
 bind('XFree', I, [P])
-bind('XMoveWindow', I, [P,U,I,I])
 bind('XFlush', I, [P])
 bind('XSendEvent', I, [P,U,I,C.c_long,P])
-bind('XQueryPointer', I, [P,U,C.POINTER(U),C.POINTER(U),C.POINTER(I),C.POINTER(I),C.POINTER(I),C.POINTER(I),C.POINTER(C.c_uint)])
 bind('XQueryTree', I, [P,U,C.POINTER(U),C.POINTER(U),C.POINTER(C.POINTER(U)),C.POINTER(C.c_uint)])
 error_type = C.CFUNCTYPE(I, P, P)
 ignore_error = error_type(lambda display, event: 0)
@@ -83,43 +80,14 @@ def keep_widgets_above_desktop(alive):
     X.XFlush(D)
 
 last = None
-seen = set()
-pending = {}
-def settle_placements(alive, scale):
-    """Restore coordinates once GTK has settled after map/config reload.
-
-    Native handles restore early. Near an edge, an interim default width can
-    clamp that position before GTK finishes shrinking to the saved size.
-    Only newly mapped windows need this later correction; never fight a drag.
-    """
-    global seen
-    now=time.monotonic()
-    for window in alive.keys()-seen:pending[window]=now+1.4
-    seen=set(alive)
-    due=[w for w,deadline in pending.items() if deadline<=now or w not in alive]
-    if not due:return
-    try:saved=json.loads((Path(__file__).resolve().parent.parent/'positions.json').read_text())
-    except (OSError,ValueError):saved={}
-    rr,child,rx,ry,wx,wy,mask=U(),U(),I(),I(),I(),I(),C.c_uint()
-    X.XQueryPointer(D,root,C.byref(rr),C.byref(child),C.byref(rx),C.byref(ry),C.byref(wx),C.byref(wy),C.byref(mask))
-    for window in due:
-        pending.pop(window,None)
-        if window not in alive or mask.value & 256:continue
-        name,width,height=alive[window];rect=saved.get('Eww - uw-'+name)
-        if not isinstance(rect,dict):continue
-        display=Gdk.Display.get_default();monitor=display.get_monitor_at_point(rect['x'],rect['y'])
-        if monitor is None:continue
-        area=monitor.get_workarea()
-        x=max(area.x+8,min(rect['x'],area.x+area.width-width-8))
-        y=max(area.y+8,min(rect['y'],area.y+area.height-height-8))
-        X.XMoveWindow(D,window,int(x*scale),int(y*scale))
-    X.XFlush(D)
 from widget_catalog import EXTRA_WIDGETS
 names = ['clock','calendar','system','music','battery','sound'] + [w['kind'] for w in EXTRA_WIDGETS]
 def emit():
     global last
     scale = max(1, Gdk.get_default_root_window().get_scale_factor())
-    result = {name:metrics(320,224) for name in names}
+    try:saved=json.loads((Path(__file__).resolve().parent.parent/'positions.json').read_text())
+    except (OSError,ValueError):saved={}
+    result={name:metrics(saved.get('Eww - uw-'+name,{}).get('width',320),saved.get('Eww - uw-'+name,{}).get('height',224)) for name in names}
     alive={}
     windows=prop(root,'_NET_CLIENT_LIST')
     if not windows:
@@ -137,7 +105,13 @@ def emit():
             result[name]=metrics(w.value//scale,h.value//scale)
             alive[window]=(name,w.value//scale,h.value//scale)
     keep_widgets_above_desktop(alive)
-    settle_placements(alive,scale)
+    try:
+        groups=json.loads((Path(__file__).resolve().parent.parent/'widget-stacks.json').read_text()).get('groups',[])
+        for group in groups:
+            active=group['active'].removeprefix('uw-')
+            if active in result:
+                for member in group['members']:result[member.removeprefix('uw-')]=result[active]
+    except (OSError,ValueError,KeyError,TypeError):pass
     if result != last:
         print(json.dumps(result),flush=True)
         last=result

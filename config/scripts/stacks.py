@@ -106,28 +106,41 @@ def drop_from_desktop(widget_id,coordinates):
     return dropped(widget_id,{'x':x,'y':y,'width':width,'height':height},
                    {'x':dx,'y':dy,'width':width,'height':height},state['windows'])
 
-def show_member(widget_id,preset=None,point=None):
-    store.ensure_daemon()
+def show_member(widget_id,preset=None,point=None,*,direction='next',cycling=False):
+    if not cycling:store.ensure_daemon()
+    # Keep the command and state commit in one lock: rapid input must not race
+    # two processes against the same outgoing member.
     with store.locked():
         rows=groups();g=containing(widget_id,rows)
         if not g:raise ValueError('스택에 없는 위젯입니다.')
         if preset is not None and preset not in store.PRESETS:raise ValueError('잘못된 크기입니다.')
-        old=g['active'];positions=store.read_json('positions.json',{});before=copy.deepcopy(positions)
-        target=store.placement(old,preset,point)
+        old=g['active'];positions=store.read_json('positions.json',{})
+        ordinary=preset is None and point is None
+        if ordinary and (cycling or old in store.visible()):
+            target=json.loads(store.eww('stack-switch',old,widget_id,direction))
+        else:
+            target=store.placement(old,preset,point)
+            before=copy.deepcopy(positions)
+            for wid in g['members']:positions['Eww - '+wid]=target
+            store.atomic_json('positions.json',positions)
+            try:
+                store.eww('close',old,check=False);store.eww('open',widget_id)
+            except Exception:
+                store.atomic_json('positions.json',before);store.eww('open',old,check=False);raise
         for wid in g['members']:positions['Eww - '+wid]=target
         g['active']=widget_id;store.atomic_json('positions.json',positions);save(rows)
-    try:
-        store.eww('close',old,check=False);store.eww('open',widget_id)
-    except Exception:
-        with store.locked():
-            g['active']=old;save(rows);store.atomic_json('positions.json',before)
-        store.eww('open',old,check=False);raise
     return target
 
 def cycle(widget_id,direction=1):
-    g=containing(widget_id)
-    if not g:return
-    members=g['members'];return show_member(members[(members.index(g['active'])+direction)%len(members)])
+    # Resolve active/index under a separate cycle lock held through the switch;
+    # callbacks from the page that just slid out cannot select a stale member.
+    import fcntl
+    with (store.CONFIG/'stack-cycle.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        g=containing(widget_id)
+        if not g:return
+        members=g['members'];return show_member(members[(members.index(g['active'])+direction)%len(members)],
+                                              direction='prev' if direction<0 else 'next',cycling=True)
 
 def dissolve(widget_id):
     with store.locked():

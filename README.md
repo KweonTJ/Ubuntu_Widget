@@ -22,10 +22,10 @@ Widget Library is a native desktop app. After installation, open **Widget Librar
 
 ### Recommended: install the Debian package
 
-Download `ubuntu-widget_2.1.0-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
+Download `ubuntu-widget_2.1.1-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
 
 ```bash
-sudo apt install ./ubuntu-widget_2.1.0-1_amd64.deb
+sudo apt install ./ubuntu-widget_2.1.1-1_amd64.deb
 /usr/bin/ubuntu-widget
 ```
 
@@ -60,6 +60,13 @@ Presets: Small **208 × 208**, Medium **320 × 224**, Large **432 × 352**. The 
 The page counter remains available for mouse clicks and wheel input. Moving or resizing a stack keeps one shared placement and size, and restarting keeps the last active card. **스택 해제** restores each card's placement from before it joined the stack.
 
 Use two-finger scrolling enabled in your system's touchpad settings. Switching follows the horizontal scroll direction supplied by the system, including its natural-scrolling preference.
+
+## Fixed in 2.1.1
+
+- Stack switches keep the same native window and animate its content with a 200 ms directional slide.
+- Position and size stay fixed throughout the transition; the desktop is no longer reprobed or snapped on each swipe.
+- Saved geometry is applied before first mapping. Removed delayed placement corrections that could fight a gesture.
+- Inactive stack cards inherit the current card's responsive dimensions.
 
 ## New in 2.1
 

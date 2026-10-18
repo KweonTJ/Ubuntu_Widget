@@ -1,8 +1,84 @@
 diff --git a/crates/eww/src/app.rs b/crates/eww/src/app.rs
-index 4b8eabc..8191b33 100644
+index 4b8eabc..d007505 100644
 --- a/crates/eww/src/app.rs
 +++ b/crates/eww/src/app.rs
-@@ -652,7 +652,9 @@ fn initialize_window<B: DisplayBackend>(
+@@ -66,6 +66,7 @@ pub enum DaemonCommand {
+         sender: DaemonResponseSender,
+         args: Option<Vec<(VarName, DynVal)>>,
+     },
++    StackSwitch { from: String, to: String, direction: String, sender: DaemonResponseSender },
+     CloseWindows {
+         windows: Vec<String>,
+         auto_reopen: bool,
+@@ -279,6 +280,12 @@ impl<B: DisplayBackend> App<B> {
+ 
+                 sender.respond_with_result(result)?;
+             }
++            DaemonCommand::StackSwitch { from, to, direction, sender } => {
++                match self.switch_stack(&from,&to,&direction) {
++                    Ok(rect)=>sender.send_success(rect)?,
++                    Err(error)=>sender.send_failure(format!("{error:#}"))?,
++                }
++            }
+             DaemonCommand::CloseWindows { windows, auto_reopen, sender } => {
+                 let errors = windows.iter().map(|window| self.close_window(window, auto_reopen)).filter_map(Result::err);
+                 // Ignore sending errors, as the channel might already be closed
+@@ -419,6 +426,54 @@ impl<B: DisplayBackend> App<B> {
+         Ok(())
+     }
+ 
++    /// Build the next page before touching the current one. Reuse its host,
++    /// keep native geometry intact, and hand lifecycle ownership to the new ID.
++    fn switch_stack(&mut self, from: &str, to: &str, direction: &str) -> Result<String> {
++        anyhow::ensure!(direction=="next" || direction=="prev","Invalid stack direction");
++        let host=self.open_windows.get(from).context("Stack source is not open")?;
++        anyhow::ensure!(crate::draggable::is_movable(&host.gtk_window),"Stack source has no native controls");
++        if from==to { return Ok(crate::draggable::geometry_json(&host.gtk_window)); }
++        anyhow::ensure!(!self.open_windows.contains_key(to),"Stack destination is already open");
++        let args=WindowArguments::new_from_args(to.into(),to.into(),HashMap::new())?;
++        let definition=self.eww_config.get_window(to)?.clone();
++        let initiator=WindowInitiator::new(&definition,&args)?;
++        anyhow::ensure!(!initiator.unfocus_close && initiator.resizable,"Stack destination must be a resizable desktop card");
++        let root_index=self.scope_graph.borrow().root_index;
++        let literals=initiator.get_scoped_vars().into_iter().map(|(k,v)|(k,SimplExpr::Literal(v))).collect();
++        let scope=self.scope_graph.borrow_mut().register_new_scope(to.into(),Some(root_index),root_index,literals)?;
++        let built=crate::widgets::build_widget::build_gtk_widget(
++            &mut self.scope_graph.borrow_mut(),Rc::new(self.eww_config.get_widget_definitions().clone()),scope,definition.widget,None);
++        let root=match built { Ok(root)=>root,Err(error)=>{self.scope_graph.borrow_mut().remove_scope(scope);return Err(error);} };
++        root.style_context().add_class(to);
++        let host=&self.open_windows[from].gtk_window;
++        if let Err(error)=crate::draggable::switch_content(host,&root,direction) {
++            self.scope_graph.borrow_mut().remove_scope(scope);return Err(error);
++        }
++        let mut previous=self.open_windows.remove(from).unwrap();
++        if let Some(handler)=previous.destroy_event_handler_id.take() { previous.gtk_window.disconnect(handler); }
++        if let Some(abort)=self.window_close_timer_abort_senders.remove(from) { _=abort.send(()); }
++        previous.gtk_window.set_title(&format!("Eww - {to}"));
++        previous.gtk_window.style_context().remove_class(&previous.name);
++        previous.gtk_window.style_context().add_class(to);
++        let old_scope=previous.scope_index;
++        previous.scope_index=scope;previous.name=to.into();
++        previous.destroy_event_handler_id=Some(previous.gtk_window.connect_destroy({
++            let send=self.app_evt_send.clone();let id=to.to_string();
++            move |_| { let (sender,_)=daemon_response::create_pair();
++                let _=send.send(DaemonCommand::CloseWindows{windows:vec![id.clone()],auto_reopen:true,sender}); }
++        }));
++        let geometry=crate::draggable::geometry_json(&previous.gtk_window);
++        self.open_windows.insert(to.into(),previous);
++        self.instance_id_to_args.remove(from);self.instance_id_to_args.insert(to.into(),args);
++        self.failed_windows.remove(to);
++        for used in self.scope_graph.borrow().variables_used_in_self_or_subscopes_of(scope) {
++            if let Ok(var)=self.eww_config.get_script_var(&used) { self.script_var_handler.add(var.clone()); }
++        }
++        self.scope_graph.borrow_mut().remove_scope(old_scope);
++        for unused in self.scope_graph.borrow().currently_unused_globals() { self.script_var_handler.stop_for_variable(unused); }
++        Ok(geometry)
++    }
++
+     fn open_window(&mut self, window_args: &WindowArguments) -> Result<()> {
+         let instance_id = &window_args.instance_id;
+         self.failed_windows.remove(instance_id);
+@@ -652,7 +707,9 @@ fn initialize_window<B: DisplayBackend>(
              let _ = apply_window_position(geometry, monitor_geometry, &window);
              if window_init.backend_options.x11.window_type != yuck::config::backend_window_options::X11WindowType::Normal {
                  window.connect_configure_event(move |window, _| {
@@ -13,6 +89,14 @@ index 4b8eabc..8191b33 100644
                      false
                  });
              }
+@@ -660,6 +717,7 @@ fn initialize_window<B: DisplayBackend>(
+         display_backend::set_xprops(&window, monitor, window_init)?;
+     }
+ 
++    crate::draggable::restore_before_map(&window,&root_widget);
+     window.show_all();
+ 
+     Ok(EwwWindow {
 diff --git a/crates/eww/src/client.rs b/crates/eww/src/client.rs
 index 616c387..b716fde 100644
 --- a/crates/eww/src/client.rs
@@ -28,10 +112,10 @@ index 616c387..b716fde 100644
      Ok(if buf.is_empty() {
 diff --git a/crates/eww/src/draggable.rs b/crates/eww/src/draggable.rs
 new file mode 100644
-index 0000000..a778c91
+index 0000000..988f7f2
 --- /dev/null
 +++ b/crates/eww/src/draggable.rs
-@@ -0,0 +1,526 @@
+@@ -0,0 +1,611 @@
 +//! Native X11 desktop-widget movement and resizing in GDK logical coordinates.
 +use gtk::{gdk, glib, prelude::*};
 +use serde::{Deserialize, Serialize};
@@ -148,38 +232,15 @@ index 0000000..a778c91
 +        child = parent;
 +    }
 +    let Some(window) = top(handle) else { return };
-+    if is_movable(&window) {
-+        return;
-+    }
-+    unsafe {
-+        window.set_data(MOVABLE, true);
-+    }
++    initialize_window_controls(&window);
++}
++
++fn initialize_window_controls(window: &gtk::Window) {
++    if is_movable(window) { return; }
++    unsafe { window.set_data(MOVABLE, true); }
 +    window.set_gravity(gdk::Gravity::NorthWest);
-+    // Reapply after responsive content has reacted to the restored width.
-+    for delay in [180, 500, 900] {
-+        let weak = window.downgrade();
-+        glib::timeout_add_local_once(Duration::from_millis(delay), move || {
-+            if let Some(window) = weak.upgrade() {
-+                let saved = read_positions().get(window.title().unwrap_or_default().as_str()).copied();
-+                if let Some(saved) = saved {
-+                    if let (Some(width), Some(height)) = (saved.width, saved.height) {
-+                        if width > 0 && height > 0 {
-+                            let display = gdk::Display::default().unwrap();
-+                            if let Some(monitor) = display.monitor_at_point(saved.x, saved.y) {
-+                                let area = monitor.workarea();
-+                                window.resize(width.min(area.width() - 16).max(1), height.min(area.height() - 16).max(1));
-+                            }
-+                        }
-+                    }
-+                    move_to(&window, Position { x: saved.x, y: saved.y });
-+                } else {
-+                    move_to(&window, position(&window));
-+                }
-+            }
-+        });
-+    }
 +    // Correct placement when a monitor is disconnected or scaling changes.
-+    if let Some(screen) = gtk::prelude::GtkWindowExt::screen(&window) {
++    if let Some(screen) = gtk::prelude::GtkWindowExt::screen(window) {
 +        let weak = window.downgrade();
 +        let signal = screen.connect_monitors_changed(move |_| {
 +            let weak = weak.clone();
@@ -210,6 +271,76 @@ index 0000000..a778c91
 +    });
 +}
 +
++fn contains_controls(widget: &gtk::Widget) -> bool {
++    if unsafe { widget.data::<bool>("eww-native-handle").is_some() } { return true; }
++    widget.clone().downcast::<gtk::Container>().ok()
++        .is_some_and(|container| container.children().iter().any(contains_controls))
++}
++
++/// Apply saved geometry before the window is first mapped. Never expose the
++/// definition's default rectangle and then correct it with delayed timers.
++pub fn restore_before_map(window: &impl IsA<gtk::Window>, root: &gtk::Widget) {
++    if !contains_controls(root) { return; }
++    let window=window.as_ref();
++    initialize_window_controls(window);
++    let Some(saved)=read_positions().get(window.title().unwrap_or_default().as_str()).copied() else { return };
++    let Some(monitor)=gdk::Display::default().and_then(|d|d.monitor_at_point(saved.x,saved.y).or_else(||d.primary_monitor())) else { return };
++    let area=monitor.workarea();
++    let width=saved.width.unwrap_or(window.size().0).clamp(1,(area.width()-16).max(1));
++    let height=saved.height.unwrap_or(window.size().1).clamp(1,(area.height()-16).max(1));
++    let x=saved.x.clamp(area.x()+8,(area.x()+area.width()-width-8).max(area.x()+8));
++    let y=saved.y.clamp(area.y()+8,(area.y()+area.height()-height-8).max(area.y()+8));
++    window.set_size_request(1,1);
++    window.set_default_size(width,height);
++    window.resize(width,height);
++    window.move_(x,y);
++}
++
++const STACK_HOST: &str="eww-native-stack-host";
++
++/// Keep one mapped X11 window, clip natural content sizes, and animate only
++/// its pages. The outgoing page lives until GTK has completed the transition.
++pub fn switch_content(window: &impl IsA<gtk::Window>, root: &gtk::Widget, direction: &str) -> anyhow::Result<()> {
++    let window=window.as_ref();
++    let existing=unsafe { window.data::<gtk::Stack>(STACK_HOST).map(|p|p.as_ref().clone()) };
++    let stack=if let Some(stack)=existing { stack } else {
++        let previous=window.child().ok_or_else(||anyhow::anyhow!("Stack host has no content"))?;
++        let stack=gtk::Stack::new();
++        stack.set_homogeneous(false);stack.set_interpolate_size(false);
++        stack.set_transition_duration(200);
++        let clip=gtk::ScrolledWindow::new(None::<&gtk::Adjustment>,None::<&gtk::Adjustment>);
++        clip.set_policy(gtk::PolicyType::External,gtk::PolicyType::External);
++        clip.set_propagate_natural_width(false);clip.set_propagate_natural_height(false);
++        // This viewport only clips layout requests. Scroll the card's own
++        // content, never shift the entire card frame inside the host.
++        clip.connect_scroll_event(|_,_|glib::Propagation::Stop);
++        window.remove(&previous);stack.add_named(&previous,"previous");
++        clip.add(&stack);window.add(&clip);clip.show_all();
++        unsafe { window.set_data(STACK_HOST,stack.clone()); }
++        stack
++    };
++    // A new stroke can interrupt a transition; GTK snapshots the current page.
++    // Keep unique child names, including a rapid return to the previous kind.
++    let name=format!("page-{}",glib::monotonic_time());
++    stack.add_named(root,&name);root.show_all();
++    stack.set_visible_child_full(&name,if direction=="prev" {gtk::StackTransitionType::SlideRight} else {gtk::StackTransitionType::SlideLeft});
++    let weak=stack.downgrade();
++    glib::timeout_add_local_once(Duration::from_millis(240),move || {
++        let Some(stack)=weak.upgrade() else { return };
++        if !stack.is_transition_running() {
++            for child in stack.children() {
++                if Some(&child)!=stack.visible_child().as_ref() { stack.remove(&child); }
++            }
++        }
++    });
++    Ok(())
++}
++
++pub fn geometry_json(window: &impl IsA<gtk::Window>) -> String {
++    let window=window.as_ref();let p=position(window);let (width,height)=window.size();
++    serde_json::json!({"x":p.x,"y":p.y,"width":width,"height":height}).to_string()
++}
++
 +#[derive(Clone, Copy)]
 +struct Drag {
 +    pointer: (f64, f64),
@@ -237,6 +368,7 @@ index 0000000..a778c91
 +}
 +
 +pub fn install(handle: &gtk::EventBox, grid: i32, on_drop: impl Fn([i32; 6]) + 'static) {
++    unsafe { handle.set_data("eww-native-handle",true); }
 +    let drag: Rc<RefCell<Option<Drag>>> = Rc::new(RefCell::new(None));
 +    handle.add_events(
 +        gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK | gdk::EventMask::POINTER_MOTION_MASK,
@@ -318,6 +450,7 @@ index 0000000..a778c91
 +}
 +
 +pub fn install_resize(handle: &gtk::EventBox, grid: i32, min_width: i32, min_height: i32, axis: &str, edge: &str) {
++    unsafe { handle.set_data("eww-native-handle",true); }
 +    let from_left = edge == "left";
 +    let horizontal_only = axis == "horizontal";
 +    let vertical_only = axis == "vertical";
@@ -503,6 +636,7 @@ index 0000000..a778c91
 +    fn gtk_dispatch_preserves_vertical_scrolling_and_latches_across_windows() {
 +        use glib::translate::*;
 +        gtk::init().expect("Run this test on Xvfb");
++        gtk::Settings::default().unwrap().set_property("gtk-enable-animations",true);
 +        let actions=Rc::new(RefCell::new(Vec::<String>::new()));
 +        fn drain() { for _ in 0..8 { while gtk::events_pending() { gtk::main_iteration_do(false); } std::thread::sleep(Duration::from_millis(10)); } }
 +        fn card(actions: Rc<RefCell<Vec<String>>>) -> (gtk::Window,gtk::ScrolledWindow) {
@@ -555,6 +689,41 @@ index 0000000..a778c91
 +        send(&second,-2.0,0.0,3800);
 +        assert_eq!(*actions.borrow(),vec!["next","prev","prev"]);
 +        unsafe { second.destroy(); } drain();
++        // A large incoming page must never resize/reposition the native host.
++        let fixed=gtk::Window::new(gtk::WindowType::Toplevel);
++        fixed.set_default_size(192,96);fixed.move_(120,100);
++        let original=gtk::Label::new(Some("First card"));fixed.add(&original);fixed.show_all();drain();
++        let rect=geometry_json(&fixed);
++        let large=gtk::Label::new(Some("A page with a much larger natural size"));large.set_size_request(1200,900);
++        let incoming:gtk::Widget=large.upcast();
++        switch_content(&fixed,&incoming,"next").unwrap();
++        let mut running=false;
++        for _ in 0..35 {
++            while gtk::events_pending() { gtk::main_iteration_do(false); }
++            assert_eq!(geometry_json(&fixed),rect,"An animation frame changed host geometry");
++            let stack=unsafe {fixed.data::<gtk::Stack>(STACK_HOST).unwrap().as_ref().clone()};
++            running|=stack.is_transition_running();
++            std::thread::sleep(Duration::from_millis(10));
++        }
++        assert!(running,"GTK must animate the page rather than remap the window");
++        let stack=unsafe {fixed.data::<gtk::Stack>(STACK_HOST).unwrap().as_ref().clone()};
++        assert_eq!(stack.children().len(),1,"Outgoing pages must be released after animation");
++        let inner=gtk::ScrolledWindow::new(None::<&gtk::Adjustment>,None::<&gtk::Adjustment>);
++        let content=gtk::Label::new(Some("Scroll inside the new card"));content.set_size_request(100,1000);inner.add(&content);
++        let small:gtk::Widget=inner.clone().upcast();
++        switch_content(&fixed,&small,"prev").unwrap();drain();
++        assert_eq!(geometry_json(&fixed),rect);
++        let offset=inner.vadjustment().value();
++        let mut vertical=gdk::Event::new(gdk::EventType::Scroll);
++        vertical.set_device(gdk::Display::default().unwrap().default_seat().and_then(|s|s.pointer()).as_ref());
++        unsafe {let p:*mut gdk::ffi::GdkEvent=vertical.to_glib_none_mut().0;
++            (*p).scroll.window=inner.window().unwrap().to_glib_full();(*p).scroll.direction=gdk::ffi::GDK_SCROLL_SMOOTH;
++            (*p).scroll.time=5000;(*p).scroll.x=40.0;(*p).scroll.y=40.0;(*p).scroll.delta_y=4.0;}
++        vertical.put();drain();
++        assert!(inner.vadjustment().value()>offset,"The persistent host must preserve inner vertical scrolling");
++        assert_eq!(geometry_json(&fixed),rect);
++        unsafe {fixed.destroy();}drain();
++
 +    }
 +
 +}
@@ -583,6 +752,31 @@ index 853a8fb..06347e6 100644
  mod error_handling_ctx;
  mod file_database;
  mod geometry;
+diff --git a/crates/eww/src/opts.rs b/crates/eww/src/opts.rs
+index eba9a04..4f81472 100644
+--- a/crates/eww/src/opts.rs
++++ b/crates/eww/src/opts.rs
+@@ -168,6 +168,10 @@ pub enum ActionWithServer {
+         should_toggle: bool,
+     },
+ 
++    /// Switch a desktop stack page inside the same mapped native window.
++    #[command(name = "stack-switch")]
++    StackSwitch { from: String, to: String, direction: String },
++
+     /// Close the given windows
+     #[command(name = "close", alias = "c")]
+     CloseWindows { windows: Vec<String> },
+@@ -291,6 +295,9 @@ impl ActionWithServer {
+                     args,
+                 })
+             }
++            ActionWithServer::StackSwitch { from, to, direction } => {
++                return with_response_channel(|sender| app::DaemonCommand::StackSwitch { from, to, direction, sender });
++            }
+             ActionWithServer::CloseWindows { windows } => {
+                 return with_response_channel(|sender| app::DaemonCommand::CloseWindows { windows, auto_reopen: false, sender });
+             }
 diff --git a/crates/eww/src/state/scope_graph.rs b/crates/eww/src/state/scope_graph.rs
 index 3af08fa..97e30c5 100644
 --- a/crates/eww/src/state/scope_graph.rs

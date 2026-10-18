@@ -17,7 +17,7 @@ installer=importlib.util.module_from_spec(spec);spec.loader.exec_module(installe
 class PackageTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
-        self.binary=self.root/'patched-eww';self.binary.write_text('#!/bin/sh\n# eww-native-draggable resize-min-width EWW_SOCKET_ID eww-native-stack-swipe\necho patched-test-engine\n');self.binary.chmod(0o755)
+        self.binary=self.root/'patched-eww';self.binary.write_text('#!/bin/sh\n# eww-native-draggable resize-min-width EWW_SOCKET_ID eww-native-stack-swipe eww-native-stack-host\necho patched-test-engine\n');self.binary.chmod(0o755)
     def tearDown(self):self.tmp.cleanup()
     def install(self,home,**kwargs):
         env={'HOME':str(home),'XDG_CONFIG_HOME':str(home/'settings'),'XDG_DATA_HOME':str(home/'data'),'XDG_CACHE_HOME':str(home/'cache')}

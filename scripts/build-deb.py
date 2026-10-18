@@ -19,7 +19,7 @@ def build(binary, output, revision='1'):
     if not re.fullmatch(r'[0-9][A-Za-z0-9.+~:-]*', version):
         raise ValueError('Invalid Debian package version.')
     data = binary.read_bytes()
-    if not data.startswith(b'\x7fELF') or b'eww-native-draggable' not in data or b'resize-min-width' not in data or b'EWW_SOCKET_ID' not in data or b'eww-native-stack-swipe' not in data:
+    if not data.startswith(b'\x7fELF') or b'eww-native-draggable' not in data or b'resize-min-width' not in data or b'EWW_SOCKET_ID' not in data or b'eww-native-stack-swipe' not in data or b'eww-native-stack-host' not in data:
         raise ValueError('Build the native-controls Eww engine first.')
     if re.search(rb'/(?:home|Users)/[^\s/"\x27]+/', data):
         raise ValueError('Developer home paths found in the engine. Rebuild using scripts/build-eww.sh.')

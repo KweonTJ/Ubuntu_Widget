@@ -11,7 +11,7 @@ import stacks
 
 class StackTests(unittest.TestCase):
  def test_create_cycle_movement_size_restore_and_dissolve(self):
-  with tempfile.TemporaryDirectory() as tmp,patch.object(store,'CONFIG',Path(tmp)),patch.object(store,'ensure_daemon'),patch.object(store,'eww',return_value='') as eww:
+  with tempfile.TemporaryDirectory() as tmp,patch.object(store,'CONFIG',Path(tmp)),patch.object(store,'ensure_daemon'),patch.object(store,'eww',side_effect=lambda *a,**kw:json.dumps(store.read_json('positions.json',{})['Eww - '+a[1]]) if a[0]=='stack-switch' else '') as eww:
    positions={'Eww - uw-clock':{'x':40,'y':80,'width':320,'height':224},'Eww - uw-calendar':{'x':400,'y':80,'width':320,'height':224}}
    store.atomic_json('positions.json',positions)
    stacks.create(['uw-clock','uw-calendar'])
@@ -19,7 +19,7 @@ class StackTests(unittest.TestCase):
    with self.assertRaises(ValueError):stacks.create(['uw-clock','uw-calendar'])
    moved={'x':120,'y':160,'width':384,'height':240}
    store.atomic_json('positions.json',{**positions,'Eww - uw-clock':moved})
-   with patch.object(store,'placement',return_value=moved):stacks.cycle('uw-clock')
+   stacks.cycle('uw-clock')
    self.assertEqual(stacks.excluded(),{'uw-clock'})
    self.assertEqual(store.read_json('positions.json',{})['Eww - uw-calendar'],moved)
    store.open_visible()
@@ -44,11 +44,23 @@ class StackTests(unittest.TestCase):
    store.atomic_json('positions.json',{'Eww - uw-clock':a,'Eww - uw-calendar':a});stacks.create(['uw-clock','uw-calendar'])
    before=store.read_json('positions.json',{})
    def engine(*args,**kwargs):
-    if args==('open','uw-calendar'):raise RuntimeError('Engine unavailable')
+    if args[:1]==('stack-switch',):raise RuntimeError('Engine unavailable')
     return ''
    with patch.object(store,'eww',side_effect=engine),patch.object(store,'placement',return_value={**a,'x':200}):
     with self.assertRaises(RuntimeError):stacks.cycle('uw-clock')
    self.assertEqual(stacks.groups()[0]['active'],'uw-clock');self.assertEqual(store.read_json('positions.json',{}),before)
+
+ def test_cycle_preserves_unsnapped_geometry_without_restarting_or_desktop_probe(self):
+  with tempfile.TemporaryDirectory() as tmp,patch.object(store,'CONFIG',Path(tmp)),patch.object(store,'ensure_daemon') as start,patch.object(store,'placement') as probe:
+   a={'x':203,'y':117,'width':192,'height':96}
+   store.atomic_json('positions.json',{'Eww - uw-clock':a,'Eww - uw-calendar':a})
+   stacks.save([{'id':'stack-test','members':['uw-clock','uw-calendar'],'active':'uw-clock','original':{'uw-clock':a,'uw-calendar':a}}])
+   with patch.object(store,'eww',return_value=json.dumps(a)) as engine:
+    stacks.cycle('uw-clock');stacks.cycle('uw-clock',-1)
+   self.assertEqual([c.args for c in engine.call_args_list],[('stack-switch','uw-clock','uw-calendar','next'),('stack-switch','uw-calendar','uw-clock','prev')])
+   start.assert_not_called();probe.assert_not_called()
+   self.assertEqual(stacks.groups()[0]['active'],'uw-clock')
+   self.assertTrue(all(v==a for v in store.read_json('positions.json',{}).values()))
 
 class DropStackTests(unittest.TestCase):
  def setUp(self):

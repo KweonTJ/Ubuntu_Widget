@@ -1,5 +1,14 @@
 # Validation scope
 
+## Version 2.1.1 (2026-10-18)
+
+- Stack GUI regressions now sample approximately every 8 ms for 1.7 seconds after each switch, covering both the animation and the former delayed-restore interval. The mapped X11 window ID and full rectangle must remain identical on every sample. Forward/backward, page-counter and wheel switches, movement, resizing, failed destinations, reopening and splitting pass at 1x and 2x scale.
+- An isolated command-driven stack fixture on the actual Ubuntu 22.04.5 / GNOME 42 / Xorg desktop also keeps the same window ID and rectangle throughout both switch directions at 2x scale. No personal widget was used by the fixture, and no physical finger swipe is claimed.
+- Native GTK tests verify that a 192 x 96 host animates its pages without changing geometry even when incoming content requests 1200 x 900, releases outgoing pages afterwards, and still scrolls the new card's inner content vertically. Continuous gesture/inertia and disabled-binding checks remain covered.
+- Cycling preserves an unsnapped saved rectangle and invokes neither daemon startup nor desktop placement probing. Failed switches preserve the previous active member and geometry.
+- The 2.1.1 Debian package passed a clean Ubuntu 22.04 container installation, two-user initialization, template upgrade with content preservation, all 27 native cards and the library on Xvfb, and purge while retaining user data.
+- The Python suite passes 32 checks with two opt-in GUI skips. Native pointer, WebKit and stack GUI tests pass separately; three native gesture/host tests pass.
+
 ## Version 2.1 (2026-10-18)
 
 - Automatic stack creation was exercised with real XTest pointer drags on isolated Xvfb displays at both 1x and 2x scale. The same test checks subsequent dragging, resizing, page-counter clicks/wheel input, reopening and splitting back to original placements.
