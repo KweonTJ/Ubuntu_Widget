@@ -75,6 +75,27 @@ class Tests(unittest.TestCase):
    return {'current':{'temperature_2m':21,'weather_code':0,'time':'2026-10-17T10:00'},'daily':{'time':['2026-10-17'],'temperature_2m_max':[23],'temperature_2m_min':[16],'weather_code':[0]},'hourly':{'time':['2026-10-17T11:00'],'temperature_2m':[22],'weather_code':[0]}}
   value=c.weather_snapshot({'city':'Test','latitude':0,'longitude':0},fetch)
   self.assertEqual(value['temperature'],'21°');self.assertEqual(value['air'],'대기질 정보 없음')
+ def test_weather_icons_follow_wmo_and_provider_daylight(self):
+  from urllib.parse import urlparse,parse_qs
+  import xml.etree.ElementTree as ET
+  from pathlib import Path
+  codes={0:'clear',1:'partly-cloudy',2:'partly-cloudy',3:'cloudy',45:'fog',48:'fog',
+         51:'drizzle',53:'drizzle',55:'drizzle',56:'freezing-rain',57:'freezing-rain',61:'rain',63:'rain',65:'rain',66:'freezing-rain',67:'freezing-rain',
+         71:'snow',73:'snow',75:'snow',77:'snow',80:'showers',81:'showers',82:'showers',85:'snow',86:'snow',95:'thunderstorm',96:'thunderstorm',97:'thunderstorm',99:'thunderstorm'}
+  assets=Path(c.__file__).resolve().parents[1]/'assets'
+  for code,base in codes.items():
+   for is_day,period in [(1,'day'),(0,'night')]:
+    expected=base+'-'+period if base in ('clear','partly-cloudy','showers') else base
+    self.assertEqual(c.weather_icon(code,is_day),expected)
+    for suffix in ('','-dark'):ET.parse(assets/('weather-'+expected+suffix+'.svg'))
+  for code in (None,-1,999):
+   self.assertEqual(c.weather_icon(code),'unknown');self.assertEqual(c.weather_name(code),'날씨 정보 없음')
+  def fetch(url,**kw):
+   if 'air-quality' in url:raise c.ConnectionError('offline')
+   self.assertIn('is_day',parse_qs(urlparse(url).query)['current'][0].split(','))
+   return {'current':{'temperature_2m':12,'weather_code':0,'is_day':0,'time':'2026-10-18T23:00'},'daily':{'time':['2026-10-18'],'temperature_2m_max':[18],'temperature_2m_min':[10],'weather_code':[0]},'hourly':{'time':['2026-10-18T23:00'],'temperature_2m':[12],'weather_code':[0]}}
+  row=c.weather_snapshot({'city':'Sample','latitude':0,'longitude':0},fetch)
+  self.assertEqual(row['icon'],'clear-night');self.assertEqual(row['is_day'],0)
  def test_redirection_never_forwards_secrets(self):
   self.assertIsNone(c.NoRedirect().redirect_request(None,None,302,'',{},'https://other.example'))
   with self.assertRaises(ValueError):c.watchlist('$(echo injected)','')

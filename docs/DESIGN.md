@@ -24,3 +24,17 @@ Two-finger horizontal scrolling is filtered before GTK dispatch only for an acti
 Cycling serializes callbacks and commits the geometry returned by the host. It does not restart the daemon, query desktop placement, snap again or close/open windows. Explicit size/placement changes in the library remain intentional geometry operations. The layout listener shares active dimensions with inactive members so a page does not start with an unrelated default layout.
 
 Initial saved geometry is applied through GTK before first mapping. Native 180/500/900 ms restoration retries and the layout listener's 1.4 s correction were removed; these independent delayed moves could expose default geometry or race a user interaction. Frame-level regressions sample the full transition and the interval after those former delays, rather than waiting for the window to return to its final position.
+
+### Weather hierarchy and illustration
+
+The weather card follows Apple's [widget guidance](https://developer.apple.com/design/human-interface-guidelines/widgets) on glanceable current conditions, information density, standard margins, and readable text, and its [layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout) on aligning related elements. These are design references, not a claim that GTK implements WidgetKit or SF Symbols.
+
+The city identifies the location, the current temperature and condition illustration share one aligned row, and the condition/high-low form a secondary row. A 384 x 208 card uses a 101 px image box instead of a detached 54 px corner icon. These measurements are project choices, not Apple-prescribed icon sizes. Very short cards keep the temperature and symbol; taller cards add a separate scrollable forecast section. The generic weather heading and repeated settings button were removed from the reading area; location settings remain in the library/context menu. Weather detail text is at least 11 logical pixels.
+
+### Artwork and bottom-edge resizing
+
+Music uses the selected MPRIS player's artwork rather than a fixed music symbol. Local file revisions are part of the cache key; HTTP(S) loads run outside the data polling thread. Images are center-cropped with rounded corners at 512 px and cached without original URLs or titles. Missing images use the existing themed music symbol.
+
+The transparent bottom resize strip occupies the original eight-pixel outer gutter. The card's content allocation stays the same; stack controls remain inside the card above this strip. Dragging anywhere along the strip changes height on the existing 16-pixel grid while side strips change width.
+
+Music prioritizes a large cover above centered title/artist text at every width. The cover uses the height left after reserving readable labels; compact cards place play/pause over the image, while tall cards have a separate transport row. A 192 x 176 card uses a 106 px cover, compared with the former 53 px side thumbnail.

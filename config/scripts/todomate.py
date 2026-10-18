@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """Native task snapshot; authentication belongs to the official page, not this code."""
 import datetime as dt
 import json
@@ -21,7 +22,8 @@ def normalize(value, now=None):
     now=time.time() if now is None else now
     date=dt.datetime.fromtimestamp(now).strftime('%Y-%m-%d')
     result={'todomate_status':'signed_out','todomate_message':'todomate를 연결해 오늘의 할 일을 확인하세요.',
-            'todomate_tasks':[],'todomate_count':'','todomate_ready':False,'todomate_date':date}
+            'todomate_tasks':[],'todomate_open_tasks':[],'todomate_completed_tasks':[],
+            'todomate_completed_count':0,'todomate_count':'','todomate_ready':False,'todomate_date':date}
     if not isinstance(value,dict):return result
     status=value.get('status','signed_out')
     if status in ('loading','syncing'):result.update(todomate_status=status,todomate_message='오늘의 할 일을 불러오는 중…')
@@ -34,8 +36,13 @@ def normalize(value, now=None):
         if not isinstance(row,dict) or not ID.fullmatch(str(row.get('id',''))) or not isinstance(row.get('text'),str) or not isinstance(row.get('done'),bool):
             result.update(todomate_status='error',todomate_message=ERRORS['schema_changed']);return result
         tasks.append({'id':row['id'],'text':row['text'][:1000],'done':row['done'],'pending':row['id'] in pending})
+    open_tasks=[task for task in tasks if not task['done']]
+    completed_tasks=[task for task in tasks if task['done']]
     result.update(todomate_status=status,todomate_ready=True,todomate_tasks=tasks,
-                  todomate_count=f"{sum(t['done'] for t in tasks)} / {len(tasks)} 완료",todomate_message='오늘의 할 일이 없습니다.' if not tasks else '오프라인 · 저장된 목록' if status=='cached' else '')
+                  todomate_open_tasks=open_tasks,todomate_completed_tasks=completed_tasks,
+                  todomate_completed_count=len(completed_tasks),
+                  todomate_count=f"{len(completed_tasks)} / {len(tasks)} 완료",
+                  todomate_message='오늘의 할 일이 없습니다.' if not tasks else '오프라인 · 저장된 목록' if status=='cached' else '오늘의 할 일을 모두 완료했어요.' if not open_tasks else '')
     return result
 
 

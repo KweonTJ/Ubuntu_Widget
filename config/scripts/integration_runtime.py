@@ -27,7 +27,7 @@ def cache_read(name,default):
 
 def empty(kind):
     shared={'status':'설정에서 연결해 주세요.','updated':0,'rows':[],'error':False}
-    if kind=='weather':shared.update(city='지역을 선택하세요',temperature='—',condition='',range='',air='',hours=[],week=[])
+    if kind=='weather':shared.update(city='지역을 선택하세요',temperature='—',condition='',icon='unknown',is_day=None,range='',air='',hours=[],week=[])
     return shared
 
 def refresh(kind,cfg):

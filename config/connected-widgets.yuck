@@ -15,27 +15,45 @@
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
  (movable-card :theme appearance :name "uw-stocks" (stocks-card)))
+(defwidget weather-symbol []
+ (image :class "weather-emblem" :tooltip {services.weather.condition ?: "날씨 정보 없음"}
+  :path {"assets/weather-" + (services.weather.icon ?: "unknown") + (appearance == "dark" ? "-dark.svg" : ".svg")}
+  :image-width {sizes.weather.weather_icon ?: 96} :image-height {sizes.weather.weather_icon ?: 96}
+  :halign "end" :valign "center"))
 (defwidget weather-card []
- (extra-card :kind "weather" :title "날씨" :tone "blue"
-  (label :class "extra-note-title" :style {"font-size: " + sizes.weather.title + "px;"} :text {services.weather.city ?: "지역을 선택하세요"} :xalign 0 :truncate true :limit-width 1)
-  (box :space-evenly false :spacing {sizes.weather.gap}
-   (label :class "extra-value" :style {"font-size: " + sizes.weather.hero + "px;"} :text {services.weather.temperature ?: "—"} :xalign 0 :hexpand true)
-   (box :orientation "v" :space-evenly false :valign "center" :visible {sizes.weather.height >= 150}
-    (label :class "extra-detail" :text {services.weather.condition ?: ""} :xalign 1)
-    (label :class "extra-detail" :text {services.weather.range ?: ""} :xalign 1)))
-  (box :visible {sizes.weather.height >= 210} :space-evenly true :spacing 6
-   (for hour in {services.weather.hours ?: "[]"}
-    (box :visible {(hour.index ?: 0) < sizes.weather.hours} :class "forecast-hour" :orientation "v" :space-evenly false :spacing 5
-     (label :class "extra-detail" :text {hour.name})
-     (label :class "extra-note-title" :text {hour.value}))))
-  (box :visible {sizes.weather.height >= 310} :orientation "v" :space-evenly false :spacing 7
-   (for day in {services.weather.week ?: "[]"}
-    (box :visible {(day.index ?: 0) < sizes.weather.rows} :space-evenly false :spacing 6
-     (label :class "extra-detail" :text {day.name} :xalign 0 :hexpand true)
-     (label :class "extra-detail" :text {day.detail} :xalign 0 :hexpand true)
-     (label :class "extra-detail" :text {day.value} :xalign 1))))
-  (label :visible {sizes.weather.height >= 360} :class "extra-detail" :text {services.weather.air ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")
-  (button :visible {sizes.weather.height >= 180} :class "extra-button" :onclick "./scripts/manager-launch.py select uw-weather" (label :text "지역 설정"))))
+ (box :class {"card weather-card extra-blue glass-uw-weather size-" + sizes.weather.mode}
+  :style {"padding: " + sizes.weather.padding + "px;"} :orientation "v" :space-evenly false
+  :hexpand true :vexpand true
+  (scroll :class "content-scroll" :hscroll true :vscroll true :hexpand true :vexpand true
+   (box :orientation "v" :space-evenly false :spacing {sizes.weather.weather_gap ?: 6} :hexpand true :vexpand true
+  (label :visible {sizes.weather.height >= 112} :class "weather-city"
+   :style {"font-size: " + (sizes.weather.weather_city ?: 14) + "px;"}
+   :text {services.weather.city ?: "지역을 선택하세요"} :xalign 0 :truncate true :limit-width 1 :hexpand true)
+  (box :class "weather-current" :space-evenly false :spacing {sizes.weather.weather_gap ?: 6}
+   :hexpand true :vexpand {sizes.weather.height < 272}
+   (label :class "weather-temperature" :style {"font-size: " + (sizes.weather.weather_temperature ?: sizes.weather.hero) + "px;"}
+    :text {services.weather.temperature ?: "—"} :xalign 0 :valign "center" :truncate true :limit-width 1 :hexpand true)
+   (weather-symbol))
+  (box :visible {sizes.weather.height >= 144} :space-evenly false :spacing {sizes.weather.weather_gap ?: 6}
+   (label :class "extra-detail" :style {"font-size: " + (sizes.weather.weather_detail ?: 11) + "px;"}
+    :text {services.weather.condition ?: ""} :xalign 0 :hexpand true :truncate true :limit-width 1)
+   (label :class "extra-detail" :style {"font-size: " + (sizes.weather.weather_detail ?: 11) + "px;"}
+    :text {services.weather.range ?: ""} :xalign 1))
+  (scroll :class "content-scroll weather-forecast" :visible {sizes.weather.height >= 272}
+   :hscroll false :vscroll true :hexpand true :vexpand true
+   (box :orientation "v" :space-evenly false :spacing {sizes.weather.weather_gap ?: 6} :hexpand true
+    (box :space-evenly true :spacing 6
+     (for hour in {services.weather.hours ?: "[]"}
+      (box :visible {(hour.index ?: 0) < sizes.weather.hours} :class "forecast-hour" :orientation "v" :space-evenly false :spacing 5
+       (label :class "extra-detail" :style {"font-size: " + (sizes.weather.weather_detail ?: 11) + "px;"} :text {hour.name})
+       (label :class "extra-note-title" :text {hour.value}))))
+    (box :visible {sizes.weather.height >= 310} :orientation "v" :space-evenly false :spacing 7
+     (for day in {services.weather.week ?: "[]"}
+      (box :visible {(day.index ?: 0) < sizes.weather.rows} :space-evenly false :spacing 6
+       (label :class "extra-detail" :text {day.name} :xalign 0)
+       (label :class "extra-detail" :text {day.detail} :xalign 0 :hexpand true :truncate true :limit-width 1)
+       (label :class "extra-detail" :text {day.value} :xalign 1))))
+    (label :visible {sizes.weather.height >= 360} :class "extra-detail" :text {services.weather.air ?: ""} :xalign 0 :wrap true :wrap-mode "wordchar")))))))
 (defwindow uw-weather
  :monitor '["<primary>", 0]'
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
@@ -60,7 +78,7 @@
  (movable-card :theme appearance :name "uw-home" (home-card)))
 (defwidget screentime-card []
  (extra-card :kind "screentime" :title "스크린 타임" :tone "purple"
-  (label :class "extra-value" :style {"font-size: " + sizes.screentime.hero + "px;"} :text {services.screen.total ?: "0분"} :xalign 0 :truncate true :limit-width 1)
+  (label :class "extra-value screentime-total" :style {"font-size: " + sizes.screentime.screen_time + "px;"} :text {services.screen.total ?: "0분"} :xalign 0)
   (label :visible {sizes.screentime.height >= 150} :class "extra-detail" :text {services.screen.status ?: "기록 꺼짐"} :xalign 0 :wrap true :wrap-mode "wordchar")
   (box :visible {sizes.screentime.height >= 210} :orientation "v" :space-evenly false :spacing 8
    (for app in {services.screen.rows ?: "[]"}

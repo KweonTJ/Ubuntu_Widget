@@ -63,6 +63,12 @@
  :geometry (geometry :anchor "top right" :x "-32px" :y "51px" :width "320px" :height "224px")
  :stacking "bg" :windowtype "desktop" :wm-ignore false :resizable true
  (movable-card :theme appearance :name "uw-note" (note-card)))
+(defwidget todo-task [task]
+ (button :class {"extra-task " + (task.done ? "done" : "")} :active {!task.pending && extra.todomate_status == "ready"}
+  :onclick {"./scripts/todomate.py toggle " + task.id + " " + (task.done ? "true" : "false") + " " + extra.todomate_date}
+  (box :space-evenly false :spacing 9
+   (label :class "task-check" :text {task.pending ? "◌" : task.done ? "●" : "○"} :valign "start")
+   (label :text {task.text} :style {"font-size: " + sizes.todo.body + "px;"} :xalign 0 :wrap true :wrap-mode "wordchar" :limit-width 1 :hexpand true))))
 (defwidget todo-card []
  (box :class {"card extra-neutral glass-uw-todo size-" + sizes.todo.mode} :style {"padding: " + sizes.todo.padding + "px;"} :orientation "v" :space-evenly false :vexpand true :spacing {sizes.todo.gap}
   (box :space-evenly false
@@ -71,13 +77,14 @@
   (label :visible {sizes.todo.height >= 280} :class "extra-note-title" :style {"font-size: " + sizes.todo.title + "px;"} :text "오늘의 할 일" :xalign 0)
   (scroll :class "content-scroll" :hscroll true :vscroll true :hexpand true :vexpand true
    (box :orientation "v" :space-evenly false :spacing 2
-    (label :visible {!(extra.todomate_ready ?: false) || (extra.todomate_tasks ?: "[]") == "[]"} :class "extra-detail" :text {extra.todomate_message ?: "todomate를 연결하세요."} :xalign 0 :yalign 0 :wrap true :wrap-mode "wordchar" :limit-width 1 :hexpand true)
-    (for task in {extra.todomate_tasks ?: "[]"}
-     (button :class {"extra-task " + (task.done ? "done" : "")} :active {!task.pending && extra.todomate_status == "ready"}
-      :onclick {"./scripts/todomate.py toggle " + task.id + " " + (task.done ? "true" : "false") + " " + extra.todomate_date}
-      (box :space-evenly false :spacing 9
-       (label :class "task-check" :text {task.pending ? "◌" : task.done ? "●" : "○"} :valign "start")
-       (label :text {task.text} :style {"font-size: " + sizes.todo.body + "px;"} :xalign 0 :wrap true :wrap-mode "wordchar" :limit-width 1 :hexpand true))))))
+    (label :visible {!(extra.todomate_ready ?: false) || (extra.todomate_open_tasks ?: "[]") == "[]"} :class "extra-detail" :text {extra.todomate_message ?: "todomate를 연결하세요."} :xalign 0 :yalign 0 :wrap true :wrap-mode "wordchar" :limit-width 1 :hexpand true)
+    (for task in {extra.todomate_open_tasks ?: "[]"}
+     (todo-task :task {task}))
+    (expander :class "todo-completed" :visible {(extra.todomate_completed_count ?: 0) > 0} :expanded false
+     :name {"완료 " + (extra.todomate_completed_count ?: 0) + "개"}
+     (box :class "todo-completed-list" :orientation "v" :space-evenly false :spacing 2
+      (for task in {extra.todomate_completed_tasks ?: "[]"}
+       (todo-task :task {task}))))))
   (label :visible {(extra.todomate_ready ?: false) && sizes.todo.height >= 160} :class "extra-detail" :text {extra.todomate_count ?: ""} :xalign 0)))
 (defwindow uw-todo
  :monitor '["<primary>", 0]'

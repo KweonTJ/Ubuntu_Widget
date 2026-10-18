@@ -92,3 +92,7 @@ No personal configuration, browser data, API keys, recordings, local paths or
 desktop backups should be included. Run `scripts/check_public.py` before every
 release. The package builder also rejects home-directory paths embedded in
 the engine, which are remapped by the engine build script.
+
+## Version history policy
+
+Use a new application version and Git tag for each release; publish versioned assets and detailed notes through GitHub Releases. Keep the English and Korean README release tables in sync, with one linked version and one short summary per row. Avoid duplicating detailed release notes in the READMEs. Never overwrite an older release with new code under the same version.

@@ -58,7 +58,10 @@ class NativeControlsTests(unittest.TestCase):
     (box :width 12 :vexpand true))
   (eventbox :resize-window true :resize-axis "horizontal" :resize-grid 16
     :resize-min-width 192 :resize-min-height 96 :halign "end" :valign "fill"
-    (box :width 12 :vexpand true))))
+    (box :width 12 :vexpand true))
+  (eventbox :resize-window true :resize-axis "vertical" :resize-grid 16
+    :resize-min-width 192 :resize-min-height 96 :halign "fill" :valign "end" :hexpand true
+    (box :height 8 :hexpand true))))
 ''')
             (config / 'eww.scss').write_text('* { margin: 0; padding: 0; border: none; min-width: 0; min-height: 0; }')
             log = (config / 'engine.log').open('w')
@@ -129,6 +132,22 @@ class NativeControlsTests(unittest.TestCase):
                 self.assertEqual(settle(), small, 'Scrolling must not move the card')
                 click(small['x'] + 80, small['y'] + 20, button=3)
                 self.assertTrue((config / 'context-click').exists(), 'Right-click menu handling must remain available')
+
+                # The full bottom edge changes only height, even with sideways pointer motion.
+                for fraction in (.2, .5, .8):
+                    bottom = settle()
+                    px = bottom['x'] + round(bottom['width'] * fraction)
+                    py = bottom['y'] + bottom['height'] - 4
+                    drag((px, py), (px + 32, py + 48))
+                    taller = settle()
+                    self.assertEqual((taller['x'], taller['y'], taller['width']),
+                                     (bottom['x'], bottom['y'], bottom['width']))
+                    self.assertEqual(taller['height'], bottom['height'] + 48)
+                bottom = settle()
+                px, py = bottom['x'] + bottom['width']//2, bottom['y'] + bottom['height'] - 4
+                drag((px,py),(px,py-800))
+                small = settle()
+                self.assertEqual((small['width'], small['height']), (192,96))
 
                 saved = json.loads((config / 'positions.json').read_text())['Eww - uw-control-test']
                 self.assertEqual({k: small[k] for k in saved}, saved)

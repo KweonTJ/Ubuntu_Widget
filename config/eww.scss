@@ -1,7 +1,7 @@
 /* Content first: a common material, clear type hierarchy and restrained accents. */
 * { all: unset; font-family: "Noto Sans", "Noto Sans CJK KR", sans-serif; font-size: 12px; color: #253246; }
 window { background: transparent; }
-.movable-canvas { padding: 8px; }
+.movable-canvas { padding: 8px 8px 0; }
 .card { border-radius: 24px; padding: 16px; min-width: 0; min-height: 0;
   background: linear-gradient(145deg, #ffffff, #edf1f6);
   border: 1px solid rgba(255,255,255,.86);
@@ -34,11 +34,15 @@ progressbar progress { min-height: 5px; border-radius: 5px; background: #527fb9;
 .music-status { color: #825368; font-size: 10px; font-weight: 600; }
 .music-title { font-weight: 600; }
 .music-artist { color: #716579; }
+.play-button.compact-play { padding: 5px; }
 .transport { margin-top: 8px; }
 .transport-button { border-radius: 12px; padding: 6px 9px; }
 .play-button { background: rgba(255,255,255,.78); border-radius: 24px; padding: 9px; }
 .transport-button:hover, .play-button:hover { background: rgba(135,107,150,.17); }
 .transport-button:disabled, .play-button:disabled { opacity: .38; }
+.play-button.music-cover-play { padding: 4px; margin: 3px; background: rgba(18,25,36,.82); }
+.play-button.music-cover-play:hover { background: rgba(18,25,36,.96); }
+
 .battery-card { background: linear-gradient(145deg, #eaf4ed, #e0eae5); }
 .battery-ring { color: #278853; background-color: rgba(37,99,67,.14); }
 .battery-ring.low { color: #ad7323; }
@@ -98,10 +102,18 @@ progressbar progress { min-height: 5px; border-radius: 5px; background: #527fb9;
 scrollbar { background: transparent; }
 scrollbar slider { min-width: 3px; border-radius: 3px; background: rgba(110,123,145,.3); }
 .close-widget { min-width: 18px; min-height: 12px; opacity: 0; }
-.corner-grip, .corner-grip:hover, .corner-grip:active, .width-grip, .width-grip:hover, .resize-grip, .resize-grip:hover { background: transparent; }
+.corner-grip, .corner-grip:hover, .corner-grip:active, .width-grip, .width-grip:hover, .height-grip, .height-grip:hover { background: transparent; }
 .width-grip { min-width: 16px; min-height: 0; margin: 24px 0; }
-.resize-grip { min-width: 18px; min-height: 18px; padding: 0; margin: 0 6px 6px 0; }
+.height-grip { min-height: 8px; min-width: 0; }
 tooltip { background: #f8fafc; border-radius: 8px; padding: 8px; }
+/* The weather illustration shares a row with its primary numeric reading. */
+.weather-city { font-weight: 600; }
+.weather-temperature { font-weight: 400; letter-spacing: -1px; }
+expander.todo-completed > title { padding: 6px 0; }
+expander.todo-completed > title > label { font-size: 11px; font-weight: 500; opacity: .75; }
+expander.todo-completed > title > arrow { min-width: 12px; min-height: 12px; margin-right: 6px; -gtk-icon-source: -gtk-icontheme("pan-end-symbolic"); }
+expander.todo-completed > title > arrow:checked { -gtk-icon-source: -gtk-icontheme("pan-down-symbolic"); }
+.todo-completed-list { margin-top: 3px; }
 /* Appearance must be last so light tone classes cannot override dark colors. */
 @import "appearance";
 

@@ -10,7 +10,7 @@ Desktop widgets for **Ubuntu GNOME on Xorg**. Choose from 35 widgets and website
 
 Drag matching widgets together to stack them. Switch cards with a **two-finger horizontal swipe** on the trackpad.
 
-[Install](#install) · [Desktop controls](#desktop-controls) · [Stacks and gestures](#stacks-and-gestures) · [Connect your apps](#widgets-that-need-your-settings) · [Ubuntu support](#ubuntu-support)
+[Install](#install) · [Releases](#releases) · [Desktop controls](#desktop-controls) · [Stacks and gestures](#stacks-and-gestures) · [Connect your apps](#widgets-that-need-your-settings) · [Ubuntu support](#ubuntu-support)
 
 ![Widget Library with clean defaults](docs/images/widget-library.png)
 
@@ -22,10 +22,10 @@ Widget Library is a native desktop app. After installation, open **Widget Librar
 
 ### Recommended: install the Debian package
 
-Download `ubuntu-widget_2.1.1-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
+Download `ubuntu-widget_2.2.0-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
 
 ```bash
-sudo apt install ./ubuntu-widget_2.1.1-1_amd64.deb
+sudo apt install ./ubuntu-widget_2.2.0-1_amd64.deb
 /usr/bin/ubuntu-widget
 ```
 
@@ -41,7 +41,7 @@ Release assets also include `SHA256SUMS` and the matching `*-source.tar.xz` arch
 | --- | --- |
 | Add | Open **Widget Library / 위젯 보관함**, pick a widget and choose **바탕화면에 추가**. |
 | Move | Drag the widget body. Placement snaps to a 16 px grid. |
-| Resize | Drag either side to change width; use the inside lower-right corner for width and height. |
+| Resize | Drag either side to change width; drag anywhere along the bottom edge to change height. Dimensions snap to a 16 px grid. |
 | Stack | Drop a card over the middle of another card with the same width and height. |
 | Switch a stack | Swipe horizontally with two fingers over the card, or click/scroll its page counter. |
 | Split | Right-click → **스택 해제**, or use the library detail panel. |
@@ -61,19 +61,17 @@ The page counter remains available for mouse clicks and wheel input. Moving or r
 
 Use two-finger scrolling enabled in your system's touchpad settings. Switching follows the horizontal scroll direction supplied by the system, including its natural-scrolling preference.
 
-## Fixed in 2.1.1
+## Releases
 
-- Stack switches keep the same native window and animate its content with a 200 ms directional slide.
-- Position and size stay fixed throughout the transition; the desktop is no longer reprobed or snapped on each swipe.
-- Saved geometry is applied before first mapping. Removed delayed placement corrections that could fight a gesture.
-- Inactive stack cards inherit the current card's responsive dimensions.
+Versioned packages and detailed change notes are maintained in [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases).
 
-## New in 2.1
-
-- Direct drop stacking, a matching-target outline and merging existing stacks.
-- Two-finger horizontal switching with one advance per continuous gesture; vertical content scrolling stays available.
-- Stack creation moved onto the desktop. The library keeps size, membership and split controls.
-- Existing Obsidian, todomate, KDE Connect, themes and personal settings are preserved. Locally stored legacy notes/tasks remain in your settings.
+| Version | Highlights |
+| --- | --- |
+| [v2.2.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.2.0) | Album covers, weather icons, completed-task folding, full-width height resizing and responsive fixes. |
+| [v2.1.1](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.1.1) | Smooth stack transitions with stable window position and size. |
+| [v2.1.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.1.0) | Drag-to-stack, stack merging and trackpad gestures. |
+| [v2.0.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.0.0) | Redesigned widget library, app connections and widget stacks. |
+| [v0.1.1](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v0.1.1) | Debian installer and matching source distribution. |
 
 ## Included widgets
 
@@ -92,6 +90,12 @@ Website choices are launchers: they open the website, rather than embedding a si
 ## Widgets that need your settings
 
 Use **내용·시간 설정** (Content/time settings) or **연결·설정** (Connection/settings) in the selected widget's detail panel.
+
+### Music — album artwork
+
+- The music card reads the current player's [MPRIS artwork URL](https://specifications.freedesktop.org/mpris/latest/Track_List_Interface.html#Mapping:Metadata_Map). Local files and HTTP(S) covers are cached as small, rounded thumbnails; a changed track refreshes its artwork.
+- Players that do not provide artwork keep the music icon. No account setup is required.
+- A large cover sits above the song title and, when space allows, the artist. Short cards put play/pause on the cover; taller cards add previous/next controls below. Artwork is cached at 512 px for crisp display at 2× scaling.
 
 ### KDE Connect — file sharing
 
@@ -117,6 +121,7 @@ Use **내용·시간 설정** (Content/time settings) or **연결·설정** (Con
 ### Weather
 
 - Select **날씨 → 연결·설정**, search for a city, choose the correct result and save it.
+- A prominent condition icon aligns with the current temperature; its size follows the card dimensions and its artwork follows local daylight and the light/dark theme. Compact cards prioritize current conditions; taller cards add scrollable forecasts. Open the library or the widget context menu to change the location.
 - No automatic location tracking is used. Search terms and selected coordinates are sent to Open-Meteo.
 - Shows current temperature, daily low/high, the next six hourly forecasts, a seven-day forecast, US AQI and PM2.5; refreshes every **15 minutes** while the card is added.
 - Air-quality values are CAMS-based predictions. US AQI is not the Korean integrated air-quality index.
@@ -136,7 +141,7 @@ Use **내용·시간 설정** (Content/time settings) or **연결·설정** (Con
 ### Notes, tasks, dates and focus
 
 - **Obsidian notes:** choose a Markdown file from an Obsidian-registered vault using **노트 선택…**. The card reads it locally and follows edits; **Obsidian에서 열기** opens the same note through the official Obsidian URI. The widget never writes to the note.
-- **todomate tasks:** choose **todomate 연결…** and sign in to the official website once. The native card shows today's own tasks and lets you check/uncheck them. One local WebKit session supplies the page's authenticated Firebase client; no passwords or tokens are copied to the widget or sent to a relay. This is an **unofficial compatibility adapter**, not a documented todomate API, and may need updates if its web app changes. Active timed tasks are completed in the official app. Chrome and the widget have separate login storage.
+- **todomate tasks:** choose **todomate 연결…** and sign in to the official website once. The native card shows today's own tasks and lets you check/uncheck them. Completed tasks move to a collapsed section at the bottom; expand it to review them or undo completion. One local WebKit session supplies the page's authenticated Firebase client; no passwords or tokens are copied to the widget or sent to a relay. This is an **unofficial compatibility adapter**, not a documented todomate API, and may need updates if its web app changes. Active timed tasks are completed in the official app. Chrome and the widget have separate login storage.
 - **Upcoming events / 다가오는 일정:** enter one event per line as `YYYY-MM-DD HH:MM | Event title`, up to 40 entries. The next 12 are shown. These are local events, without Google/Apple account sync or event alarms.
 - **Countdown / 디데이:** choose a title and date in `YYYY-MM-DD` format.
 - **Focus / 집중 타이머:** choose 1–180 minutes; start, pause or reset from the widget. Completion notifications require the timer's data listener to be running.

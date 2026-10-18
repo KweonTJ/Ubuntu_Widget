@@ -218,19 +218,33 @@ def search_city(name,fetch=request):
              'latitude':r['latitude'],'longitude':r['longitude'],'connected':True} for r in data.get('results',[])]
 
 def weather_name(code):
-    if code is None:return '날씨 정보 없음'
-    if code==0:return '맑음'
-    if code in (1,2,3):return '구름 많음' if code==3 else '대체로 맑음'
-    if code in (45,48):return '안개'
-    if code in (71,73,75,77,85,86):return '눈'
-    if code>=95:return '뇌우'
-    return '비'
+    for codes,name in [((0,),'맑음'),((1,),'대체로 맑음'),((2,),'구름 조금'),((3,),'흐림'),
+                       ((45,48),'안개'),((51,53,55),'이슬비'),((56,57),'어는 이슬비'),
+                       ((61,63,65),'비'),((66,67),'어는 비'),((71,73,75),'눈'),((77,),'싸락눈'),
+                       ((80,81,82),'소나기'),((85,86),'눈 소나기'),((95,97),'뇌우'),((96,99),'우박을 동반한 뇌우')]:
+        if code in codes:return name
+    return '날씨 정보 없음'
+
+def weather_icon(code,is_day=True):
+    """Local SVG names for Open-Meteo's WMO codes; daylight is provider-local."""
+    period='night' if is_day==0 else 'day'
+    if code==0:return 'clear-'+period
+    if code in (1,2):return 'partly-cloudy-'+period
+    if code==3:return 'cloudy'
+    if code in (45,48):return 'fog'
+    if code in (51,53,55):return 'drizzle'
+    if code in (56,57,66,67):return 'freezing-rain'
+    if code in (61,63,65):return 'rain'
+    if code in (71,73,75,77,85,86):return 'snow'
+    if code in (80,81,82):return 'showers-'+period
+    if code in (95,96,97,99):return 'thunderstorm'
+    return 'unknown'
 
 def temperature(value):return '—' if value is None else f'{round(value)}°'
 
 def weather_snapshot(cfg,fetch=request):
     loc={'latitude':cfg['latitude'],'longitude':cfg['longitude'],'timezone':'auto'}
-    data=fetch('https://api.open-meteo.com/v1/forecast?'+urllib.parse.urlencode({**loc,'current':'temperature_2m,weather_code',
+    data=fetch('https://api.open-meteo.com/v1/forecast?'+urllib.parse.urlencode({**loc,'current':'temperature_2m,weather_code,is_day',
         'hourly':'temperature_2m,weather_code','daily':'temperature_2m_max,temperature_2m_min,weather_code','forecast_days':7}))
     current=data['current']; daily=data['daily']; hourly=data['hourly']
     week=[{'name':('오늘' if i==0 else dt.date.fromisoformat(day).strftime('%m/%d')),
@@ -247,6 +261,7 @@ def weather_snapshot(cfg,fetch=request):
         if aq is not None:air=f'US AQI {round(aq)} · PM2.5 '+('—' if pm is None else f'{pm:.1f} μg/m³')
     except ConnectionError:pass
     return {'city':cfg['city'],'temperature':temperature(current['temperature_2m']),'condition':weather_name(current['weather_code']),
+            'icon':weather_icon(current['weather_code'],current.get('is_day',1)),'is_day':current.get('is_day'),'weather_code':current['weather_code'],
             'range':week[0]['value'],'hours':hours,'week':week,'air':air,'status':'Open-Meteo · CAMS · 15분마다 조회','updated':time.time()}
 
 def home_url(value):

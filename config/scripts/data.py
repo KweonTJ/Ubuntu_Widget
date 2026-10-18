@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Local-only data and explicit controls for the Eww desktop widgets."""
+"""Desktop data, player artwork and explicit controls for the Eww widgets."""
 import calendar
 import datetime as dt
 import json
@@ -13,6 +13,7 @@ import time
 from zoneinfo import ZoneInfo
 
 import dbus
+from album_art import ArtworkCache
 
 TZ = None  # None means the current user's local system timezone.
 PLAYER = "org.mpris.MediaPlayer2.Player"
@@ -20,6 +21,7 @@ PROPS = "org.freedesktop.DBus.Properties"
 BATTERIES = Path("/sys/class/power_supply")
 BUS = None
 SYSTEM_BUS = None
+ARTWORK = ArtworkCache()
 
 
 def command(args):
@@ -31,7 +33,7 @@ def command(args):
         return ""
 
 
-def media():
+def media(artwork=True):
     global BUS
     players = []
     try:
@@ -50,7 +52,7 @@ def media():
     if not players:
         return None, {"title": "재생 중인 음악 없음", "artist": "음악 앱이나 브라우저에서 재생하세요",
                       "status": "음악", "playing": False, "available": False,
-                      "can_play": False, "can_previous": False, "can_next": False}
+                      "can_play": False, "can_previous": False, "can_next": False, "art": ""}
     players.sort(key=lambda p: {"Playing": 0, "Paused": 1}.get(str(p[1].get("PlaybackStatus")), 2))
     obj, p = players[0]
     m = p.get("Metadata", {})
@@ -59,6 +61,7 @@ def media():
     artist = ", ".join(str(x) for x in m.get("xesam:artist", []))[:160]
     control = bool(p.get("CanControl", False))
     return obj, {"title": title, "artist": artist or "미디어 플레이어",
+                 "art": ARTWORK.get(str(m.get("mpris:artUrl", ""))) if artwork else "",
                  "status": "지금 재생 중" if playing else "일시 정지", "playing": playing,
                  "available": control, "can_play": control and bool(p.get("CanPause" if playing else "CanPlay", False)),
                  "can_previous": control and bool(p.get("CanGoPrevious", False)),
@@ -185,7 +188,7 @@ def snapshot(previous):
 
 def action(name):
     if name in ("play", "previous", "next"):
-        obj, info = media()
+        obj, info = media(artwork=False)
         key = {"play": "can_play", "previous": "can_previous", "next": "can_next"}[name]
         if obj is not None and info[key]:
             method = {"play": "PlayPause", "previous": "Previous", "next": "Next"}[name]
