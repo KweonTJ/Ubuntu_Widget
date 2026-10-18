@@ -1,0 +1,69 @@
+{
+  "name": "windows-widget",
+  "productName": "Widget Library",
+  "version": "1.0.0",
+  "description": "Independent desktop widgets for Windows 11",
+  "license": "MIT",
+  "author": "Ubuntu Widget contributors",
+  "main": "src/main.cjs",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "smoke": "electron . --smoke",
+    "build": "electron-builder --win nsis zip --x64 --publish never",
+    "build:arm64": "electron-builder --win nsis zip --arm64 --publish never"
+  },
+  "dependencies": {
+    "systeminformation": "5.33.15"
+  },
+  "devDependencies": {
+    "electron": "44.9.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "io.github.kweontj.windowswidget",
+    "artifactName": "windows-widget-${version}-${arch}-${os}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**",
+      "renderer/**",
+      "assets/**",
+      "native/**",
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "native/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Widget Library",
+      "deleteAppDataOnUninstall": false,
+      "script": "packaging/installer.nsi",
+      "installerLanguages": [
+        "en_US"
+      ]
+    },
+    "afterPack": "packaging/after-pack.cjs"
+  }
+}

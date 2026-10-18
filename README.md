@@ -1,4 +1,4 @@
-# Ubuntu Widget
+# Ubuntu Widget · Windows Widget
 
 **English** · [한국어](README.ko.md)
 
@@ -7,6 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Desktop widgets for **Ubuntu GNOME on Xorg**. Choose from 35 widgets and website shortcuts, arrange them on a grid, and match your desktop with light/dark themes and optional glass.
+
+A separate **Windows 11 x64 edition** is available in [`windows-widget/`](windows-widget/README.md). [Windows installation](#windows-11) · [Windows release](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/windows-v1.0.0).
 
 Drag matching widgets together to stack them. Switch cards with a **two-finger horizontal swipe** on the trackpad.
 
@@ -22,7 +24,7 @@ Widget Library is a native desktop app. After installation, open **Widget Librar
 
 ### Recommended: install the Debian package
 
-Download `ubuntu-widget_2.2.0-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
+Download `ubuntu-widget_2.2.0-1_amd64.deb` from [Ubuntu v2.2.0 release](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.2.0). Open a terminal in the download folder and run:
 
 ```bash
 sudo apt install ./ubuntu-widget_2.2.0-1_amd64.deb
@@ -34,6 +36,17 @@ APT installs the required runtime dependencies. **Rust and build tools are not r
 The first launch creates your own configuration with an empty desktop. Package installation does not copy the developer's settings, access accounts, or enable autostart. Updates refresh program templates on your next launch and preserve notes, connections and layout. If you previously installed from source, remove that installation's launcher with `./scripts/uninstall.py` before switching to the Debian package; your configuration is kept.
 
 Release assets also include `SHA256SUMS` and the matching `*-source.tar.xz` archive containing patched Eww and vendored Cargo sources. See [packaging and rebuilding](docs/PACKAGING.md).
+
+### Windows 11
+
+1. Download the [Windows installer EXE](https://github.com/KweonTJ/Ubuntu_Widget/releases/download/windows-v1.0.0/windows-widget-1.0.0-x64-win.exe) from [Windows v1.0.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/windows-v1.0.0) and run it on **Windows 11 x64, build 22000 or later**. Windows 10 is not supported. Node.js, Python, Eww and administrator rights are not needed for the installer.
+2. Choose an installation directory, then open **Widget Library** from the Start menu or desktop shortcut. Select a widget and click **바탕화면에 추가**. Right-click the library's taskbar icon to pin it.
+3. Alternatively, extract the entire [portable ZIP](https://github.com/KweonTJ/Ubuntu_Widget/releases/download/windows-v1.0.0/windows-widget-1.0.0-x64-win.zip) and run **Widget Library.exe**. Keep all extracted runtime files together.
+4. Closing the library leaves widgets running in the tray. Use the tray menu to reopen it, show all widgets or exit. Enable login startup in **설정** if wanted.
+
+This is an **initial prerelease**. The binaries are unsigned, so Windows may show an unrecognized-publisher prompt. Windows 11 hardware, account and gesture integrations are not fully validated; see the [Windows guide](windows-widget/README.md) and [validation status](windows-widget/docs/VALIDATION.md). Toss Securities is a website shortcut in the Windows edition. User settings stay in `%APPDATA%\windows-widget\` and are preserved on uninstall. No personal settings or login data are shipped.
+
+The Windows source lives in `windows-widget/`; Ubuntu's Eww/GTK engine is separate. The desktop controls and provider details below describe the Ubuntu edition; consult the Windows guide for platform differences.
 
 ## Desktop controls
 
@@ -67,6 +80,7 @@ Versioned packages and detailed change notes are maintained in [GitHub Releases]
 
 | Version | Highlights |
 | --- | --- |
+| [Windows v1.0.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/windows-v1.0.0) | Initial Windows 11 library, independent cards, grid resizing, stacks, themes and Windows adapters (prerelease). |
 | [v2.2.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.2.0) | Album covers, weather icons, completed-task folding, full-width height resizing and responsive fixes. |
 | [v2.1.1](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.1.1) | Smooth stack transitions with stable window position and size. |
 | [v2.1.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.1.0) | Drag-to-stack, stack merging and trackpad gestures. |

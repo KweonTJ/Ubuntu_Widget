@@ -44,3 +44,7 @@ The file-sharing widget calls the installed [KDE Connect](https://kdeconnect.kde
 ## WebKitGTK and external apps
 
 [WebKitGTK](https://webkitgtk.org/) is a system runtime dependency for the local todomate session, under upstream LGPL/BSD and per-file licenses; it is not bundled. [Obsidian](https://obsidian.md/) and [todomate](https://www.todomate.net/) are separately installed/hosted third-party apps, not open-source components redistributed by this project. Only the project's connector code is distributed; authentication and provider terms remain with those apps.
+
+## Windows edition
+
+The independent Windows renderer under `windows-widget/` uses Electron (MIT, including Chromium/Node runtime notices), systeminformation (MIT), electron-builder (MIT, build time), and NSIS (zlib/libpng, installer). Eww/GTK are not bundled with Windows. See [Windows third-party notices](windows-widget/THIRD_PARTY_NOTICES.md) for pinned versions, optional services and weather-data attribution.

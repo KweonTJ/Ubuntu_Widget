@@ -29,6 +29,9 @@ for name in filter(None,files):
     check('.web-profile' not in path.parts,'Private browser profile must not be exported: '+name)
     check(path.suffix not in {'.mp4','.webm','.xwd','.pyc','.log','.key','.pem'} and not name.endswith('.tar.gz'),'Unexpected private/binary export: '+name)
     if path.suffix=='.png':continue
+    if name=='windows-widget/assets/icon.ico':
+        check(path.read_bytes()[:4]==b'\x00\x00\x01\x00','Invalid Windows icon header.')
+        continue
     try:text=path.read_text()
     except UnicodeError:errors.append('Unexpected binary file: '+name);continue
     for pattern in patterns:

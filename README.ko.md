@@ -1,4 +1,4 @@
-# Ubuntu Widget
+# Ubuntu Widget · Windows Widget
 
 [English](README.md) · **한국어**
 
@@ -7,6 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 **Ubuntu GNOME의 Xorg 환경**에서 사용하는 바탕화면 위젯 앱입니다. 35가지 위젯·웹사이트 바로가기를 골라 그리드에 배치하고, 라이트·다크 테마와 선택 가능한 글래스 효과로 꾸밀 수 있습니다.
+
+별도의 **Windows 11 x64 버전**은 [`windows-widget/`](windows-widget/README.ko.md)에서 관리합니다. [Windows 설치](#windows-11) · [Windows 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/windows-v1.0.0).
 
 같은 크기 위젯을 서로 겹쳐 놓아 스택으로 묶고, 트랙패드에서 **두 손가락을 가로로 밀어** 넘기세요.
 
@@ -22,7 +24,7 @@
 
 ### 권장: Debian 패키지로 설치
 
-[GitHub 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)에서 `ubuntu-widget_2.2.0-1_amd64.deb`를 내려받으세요. 다운로드한 폴더에서 터미널을 열고 실행하세요.
+[Ubuntu v2.2.0 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.2.0)에서 `ubuntu-widget_2.2.0-1_amd64.deb`를 내려받으세요. 다운로드한 폴더에서 터미널을 열고 실행하세요.
 
 ```bash
 sudo apt install ./ubuntu-widget_2.2.0-1_amd64.deb
@@ -34,6 +36,17 @@ APT가 필요한 실행 의존성을 함께 설치합니다. 패치된 Eww 엔�
 처음 실행하면 각 사용자의 설정을 만들고 빈 바탕화면으로 시작합니다. 패키지 설치 시 개발자의 설정을 복사하거나 계정에 접근하거나 자동 실행을 켜지 않습니다. 업데이트 후 다음 실행에서 프로그램 템플릿을 갱신하며 메모·연결 설정·배치를 보존합니다. 기존에 소스로 설치했다면 해당 소스의 `./scripts/uninstall.py`로 기존 실행기를 제거한 뒤 Debian 패키지로 전환하세요. 사용자 설정은 유지됩니다.
 
 릴리즈에는 `SHA256SUMS`와 해당 빌드의 `*-source.tar.xz`도 함께 제공합니다. 소스 압축 파일에는 패치된 Eww와 Cargo 의존성 소스가 포함됩니다. [패키지 관리 및 재빌드 안내](docs/PACKAGING.md)를 참고하세요.
+
+### Windows 11
+
+1. [Windows v1.0.0 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/windows-v1.0.0)의 [설치 EXE](https://github.com/KweonTJ/Ubuntu_Widget/releases/download/windows-v1.0.0/windows-widget-1.0.0-x64-win.exe)를 내려받아 **Windows 11 x64, 빌드 22000 이상**에서 실행하세요. Windows 10은 지원하지 않습니다. 설치 파일 사용에는 Node.js·Python·Eww·관리자 권한이 필요하지 않습니다.
+2. 설치 경로를 선택한 뒤 시작 메뉴나 바탕화면의 **Widget Library**를 실행하세요. 위젯을 골라 **바탕화면에 추가**를 누릅니다. 보관함의 작업 표시줄 아이콘은 오른쪽 클릭으로 고정할 수 있습니다.
+3. 무설치는 [ZIP](https://github.com/KweonTJ/Ubuntu_Widget/releases/download/windows-v1.0.0/windows-widget-1.0.0-x64-win.zip) 전체를 풀고 **Widget Library.exe**를 실행하세요. 함께 들어 있는 런타임 파일을 유지해야 합니다.
+4. 보관함을 닫아도 트레이에서 실행됩니다. 트레이에서 보관함 열기·모든 위젯 표시·종료를 선택하세요. 자동 시작은 **설정**에서 직접 켭니다.
+
+Windows판은 **초기 프리릴리즈**입니다. 코드 서명이 없어 알 수 없는 게시자 안내가 표시될 수 있습니다. 실제 Windows 11 기기·계정·제스처 연동은 완전히 검증되지 않았으므로 [Windows 안내](windows-widget/README.ko.md)와 [검증 범위](windows-widget/docs/VALIDATION.md)를 확인하세요. Windows의 토스증권은 바로가기입니다. 설정은 `%APPDATA%\windows-widget\`에 사용자별로 저장하며 제거 후에도 보존합니다. 배포물에는 개인정보나 로그인 데이터를 포함하지 않습니다.
+
+Windows 소스는 `windows-widget/`에 있고 Ubuntu의 Eww·GTK 엔진과 분리되어 있습니다. 아래 조작·연동 설명은 Ubuntu 기준이며 Windows 차이는 해당 안내를 참고하세요.
 
 ## 바탕화면 조작
 
@@ -67,6 +80,7 @@ APT가 필요한 실행 의존성을 함께 설치합니다. 패치된 Eww 엔�
 
 | 버전 | 주요 변경 |
 | --- | --- |
+| [Windows v1.0.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/windows-v1.0.0) | Windows 11 보관함·독립 위젯·그리드 크기 조절·스택·테마·Windows 어댑터의 초기 프리릴리즈. |
 | [v2.2.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.2.0) | 앨범 커버·날씨 아이콘, 완료한 할 일 숨김, 하단 높이 조절과 반응형 표시 개선. |
 | [v2.1.1](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.1.1) | 스택 전환 애니메이션과 위치·크기 안정화. |
 | [v2.1.0](https://github.com/KweonTJ/Ubuntu_Widget/releases/tag/v2.1.0) | 드래그 스택 생성·병합과 트랙패드 제스처. |

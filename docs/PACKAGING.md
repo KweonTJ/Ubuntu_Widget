@@ -96,3 +96,9 @@ the engine, which are remapped by the engine build script.
 ## Version history policy
 
 Use a new application version and Git tag for each release; publish versioned assets and detailed notes through GitHub Releases. Keep the English and Korean README release tables in sync, with one linked version and one short summary per row. Avoid duplicating detailed release notes in the READMEs. Never overwrite an older release with new code under the same version.
+
+## Windows edition
+
+Windows sources and the npm lockfile live in `windows-widget/`. Build there with Node.js 24: `npm ci`, `npm test`, `npm run smoke`, `npm run build`, then `node scripts/check-package.cjs`. The root Windows workflow uses this subdirectory. Publish Windows versions as `windows-vX.Y.Z`, independently of the Ubuntu `VERSION`/`vX.Y.Z` tags.
+
+Upload the versioned x64 installer EXE, portable ZIP, clean Windows source ZIP and `SHA256SUMS`. Mark an initial Windows build as a prerelease until Windows 11 hardware/account/gesture validation is complete, preserving the stable Ubuntu release as latest. Include the validation limits in the release notes. Keep one Windows row per version in both root and Windows README tables. Never upload `node_modules`, build caches, `.smoke-profile`, credentials or live user state.

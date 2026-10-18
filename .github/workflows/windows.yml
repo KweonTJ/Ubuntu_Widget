@@ -1,0 +1,47 @@
+name: Windows packages
+on:
+  workflow_dispatch:
+  push:
+    tags: ['windows-v*']
+  pull_request:
+    paths: ['windows-widget/**', '.github/workflows/windows.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2025
+    defaults:
+      run:
+        working-directory: windows-widget
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: windows-widget/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - name: Validate native adapter
+        shell: powershell
+        run: |
+          $errors = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile("$pwd/native/windows.ps1", [ref]$null, [ref]$errors)
+          if ($errors.Count) { throw ($errors | Out-String) }
+          $result = & powershell.exe -NoProfile -NonInteractive -File native/windows.ps1 -Action Snapshot | ConvertFrom-Json
+          if (-not $result.media.status) { throw 'Missing native media status' }
+      - run: npm run smoke
+      - run: npm run build
+      - run: node scripts/check-package.cjs
+      - name: Checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem dist/*.exe,dist/*.zip | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Set-Content -Encoding utf8 dist/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-widget-x64
+          path: |
+            windows-widget/dist/*.exe
+            windows-widget/dist/*.zip
+            windows-widget/dist/SHA256SUMS
+            windows-widget/docs/images/*.png
