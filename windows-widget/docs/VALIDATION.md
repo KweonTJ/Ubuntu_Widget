@@ -9,6 +9,18 @@
 
 - A live Open-Meteo geocoding/forecast probe from the restricted build host timed out; live weather connectivity was not validated here.
 
+## Automated Windows checks
+
+The repository's [Windows workflow](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/windows.yml) runs on **Windows Server 2025**, not a physical Windows 11 PC. It checks:
+
+- 15 Node model/render/installer tests, PowerShell syntax and a basic native adapter response.
+- Isolated Electron rendering of all 36 entries, IPC add/update/remove and stack merge/split.
+- Native Windows EXE/ZIP packaging and source/license/profile-exclusion checks.
+- Silent per-user installation and removal, including preserving local user data and unrelated files in the destination.
+- SHA-256 checksums and downloadable build artifacts.
+
+The release notes link the successful run used for each release. These checks do not validate real Bluetooth devices, media players, account login or physical gestures.
+
 ## Not verified on Windows 11 hardware
 
 The following require a Windows 11 PC; successful cross-compilation does not establish them:
@@ -21,7 +33,7 @@ The following require a Windows 11 PC; successful cross-compilation does not est
 - Real todomate email/password login and today-task writes in the Electron session.
 - Obsidian URI handling, KDE Connect transfers and Home Assistant authentication/control.
 
-No connected accounts or devices were used on the build host. Linux Ubuntu Widget's live profile was not read or migrated. The Windows CI file is prepared but has **not been run on GitHub** for this local folder.
+No connected accounts or devices were used on the build host. Linux Ubuntu Widget's live profile was not read or migrated. Windows CI results are recorded in the workflow linked above; they do not establish physical Windows 11 compatibility.
 
 ## Recheck on Windows
 

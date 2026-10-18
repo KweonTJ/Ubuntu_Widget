@@ -66,7 +66,7 @@ No telemetry. Weather contacts Open-Meteo only after a city is configured; todom
 
 ## Develop and package
 
-Use **Node.js 22 or later** on Windows 11:
+Use **Node.js 24** on Windows 11 for builds:
 
 ```powershell
 npm ci

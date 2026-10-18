@@ -66,7 +66,7 @@ Microsoft·Apple의 공식 앱이 아닙니다. **Windows 첫 구현으로, 하�
 
 ## 수정·빌드
 
-Windows 11에서 Node.js 22 이상을 설치하세요.
+빌드할 때는 Windows 11에서 Node.js 24를 사용하세요.
 
 ```powershell
 npm ci
