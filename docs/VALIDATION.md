@@ -1,5 +1,15 @@
 # Validation scope
 
+## Version 2.1 (2026-10-18)
+
+- Automatic stack creation was exercised with real XTest pointer drags on isolated Xvfb displays at both 1x and 2x scale. The same test checks subsequent dragging, resizing, page-counter clicks/wheel input, reopening and splitting back to original placements.
+- Unit checks cover the 65% equal-size overlap rule, stale/mismatched/hidden targets, merging existing stacks while retaining original placements, and rollback after an engine failure.
+- Three native Rust tests cover continuous horizontal scroll accumulation, one switch per stroke including inertia after the next card maps, vertical/diagonal/noise rejection, and real queued GDK scroll dispatch through GTK. A vertical scroll viewport still moves, and reactive enabling/disabling of stack gestures is checked.
+- The host touchpad has two-finger and horizontal scrolling enabled. Tests inject continuous GDK events; they do not claim a physical finger swipe on the user's touchpad.
+- `make test` passes 31 checks and skips two opt-in GUI tests. Native pointer, embedded WebKit and automatic-stack GUI tests pass separately.
+- The 2.1 Debian package passed installation, two-user initialization, program-template update with content preservation, all 27 native cards and the GTK library on Xvfb, and purge with user data retained in a clean Ubuntu 22.04 container.
+- Ubuntu support boundaries remain unchanged: full desktop verification is Ubuntu 22.04.5 / GNOME 42 / Xorg / amd64. Other releases and Wayland gain no new support claim.
+
 ## Version 2.0 (2026-10-18)
 
 - Ubuntu 22.04.5 LTS / GNOME 42 / Xorg / amd64 remains the desktop-verified environment.

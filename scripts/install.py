@@ -23,7 +23,7 @@ def install(binary,autostart=False):
         raise ValueError(f'{config} already contains an unrecognized installation. Move it aside before installing.')
     if not binary.is_file() or not os.access(binary,os.X_OK):raise ValueError('Build the patched Eww first, or use --eww /path/to/patched/eww.')
     content=binary.read_bytes()
-    if b'eww-native-draggable' not in content or b'resize-min-width' not in content or b'EWW_SOCKET_ID' not in content:
+    if b'eww-native-draggable' not in content or b'resize-min-width' not in content or b'EWW_SOCKET_ID' not in content or b'eww-native-stack-swipe' not in content:
         raise ValueError('This Eww does not contain the required native move/resize extension. Use scripts/build-eww.sh.')
     config.mkdir(parents=True,exist_ok=True,mode=0o700);lib.mkdir(parents=True,exist_ok=True)
     initialize(config, force=True)

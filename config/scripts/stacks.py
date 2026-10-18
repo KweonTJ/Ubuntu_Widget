@@ -53,6 +53,59 @@ def create(members):
         store.eww('open-many',*members,check=False);raise
     return g['id']
 
+
+def overlap(a,b):
+    if (a['width'],a['height'])!=(b['width'],b['height']):return 0
+    intersection=max(0,min(a['x']+a['width'],b['x']+b['width'])-max(a['x'],b['x'])) * max(0,min(a['y']+a['height'],b['y']+b['height'])-max(a['y'],b['y']))
+    return intersection / max(1,a['width']*a['height'])
+
+
+def dropped(widget_id,before,after,windows):
+    """Merge only after a real body drag ends, using mapped windows as targets.
+
+    Existing overlap at startup, clicks, cancelled drags and resizes never call
+    this path. Preserve the incoming card's pre-drag position for splitting.
+    """
+    store.find(widget_id)
+    actual=windows.get(widget_id)
+    if not actual or any(abs(actual[k]-after[k])>2 for k in ('x','y','width','height')):return
+    with store.locked():
+        rows=groups();source=containing(widget_id,rows);hidden=store.hidden();valid={w['id'] for w in store.catalogue()}
+        peers=[(overlap(after,r),order,wid) for order,(wid,r) in enumerate(windows.items())
+               if wid!=widget_id and wid in valid and wid not in hidden and wid not in excluded()
+               and not (source and wid in source['members']) and overlap(after,r)>=.65]
+        if not peers:return
+        target_id=max(peers)[2];target=containing(target_id,rows)
+        original_rows=copy.deepcopy(rows);positions=store.read_json('positions.json',{});original_positions=copy.deepcopy(positions)
+        source_members=source['members'] if source else [widget_id]
+        target_members=target['members'] if target else [target_id]
+        originals={**(target['original'] if target else {target_id:copy.deepcopy(windows[target_id])}),
+                   **(source['original'] if source else {widget_id:copy.deepcopy(before)})}
+        g={'id':target['id'] if target else 'stack-'+uuid.uuid4().hex[:12],
+           'members':target_members+source_members,'active':widget_id,'original':originals}
+        rows=[r for r in rows if r is not source and r is not target]+[g]
+        placement=copy.deepcopy(windows[target_id])
+        for wid in g['members']:positions['Eww - '+wid]=placement
+        store.atomic_json('positions.json',positions);save(rows)
+    try:
+        for wid in (widget_id,target_id):store.eww('close',wid,check=False)
+        store.eww('open',widget_id)
+    except Exception:
+        with store.locked():save(original_rows);store.atomic_json('positions.json',original_positions)
+        store.eww('open-many',widget_id,target_id,check=False);raise
+    return g['id']
+
+
+def drop_from_desktop(widget_id,coordinates):
+    import subprocess
+    values=list(map(int,coordinates))
+    if len(values)!=6:raise ValueError('Invalid drag geometry')
+    x,y,dx,dy,width,height=values
+    if width<=0 or height<=0:raise ValueError('Invalid drag size')
+    state=json.loads(subprocess.check_output(['/usr/bin/python3',str(store.CONFIG/'scripts/desktop_geometry.py'),'state'],text=True,timeout=5))
+    return dropped(widget_id,{'x':x,'y':y,'width':width,'height':height},
+                   {'x':dx,'y':dy,'width':width,'height':height},state['windows'])
+
 def show_member(widget_id,preset=None,point=None):
     store.ensure_daemon()
     with store.locked():
@@ -121,10 +174,12 @@ def main():
                 if value!=previous:print(json.dumps(value),flush=True);previous=value
             except (OSError,ValueError):print('{}',flush=True)
             time.sleep(.3)
+    elif len(args)==8 and args[0]=='drop':drop_from_desktop(args[1],args[2:])
+    elif len(args)==3 and args[0]=='swipe' and args[2] in ('next','prev'):cycle(args[1],-1 if args[2]=='prev' else 1)
     elif len(args)==2 and args[0] in ('next','prev','up','down','split'):
         if args[0]=='split':dissolve(args[1])
         else:cycle(args[1],-1 if args[0] in ('prev','up') else 1)
-    else:raise SystemExit('Usage: stacks.py watch | next|prev|split <widget-id>')
+    else:raise SystemExit('Usage: stacks.py watch | next|prev|split <widget-id> | drop <widget-id> x y dx dy width height | swipe <widget-id> next|prev')
 
 if __name__=='__main__':
     try:main()

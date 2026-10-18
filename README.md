@@ -1,36 +1,20 @@
 # Ubuntu Widget
 
-**English** | [한국어](README.ko.md)
+**English** · [한국어](README.ko.md)
 
+[![Release](https://img.shields.io/github/v/release/KweonTJ/Ubuntu_Widget)](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)
 [![Package checks](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-A macOS-inspired desktop widget library for **Ubuntu GNOME on Xorg**. Browse **35 built-in choices**, add individual widgets, and place them on a 16 px grid. Cards share rounded corners, responsive layouts, light/dark themes, and optional glass effects.
+Desktop widgets for **Ubuntu GNOME on Xorg**. Choose from 35 widgets and website shortcuts, arrange them on a grid, and match your desktop with light/dark themes and optional glass.
 
-This is an independent community project, not an Apple product. The current on-screen interface is primarily Korean; the setup labels used below include their original text. A Korean README is available through the language link above; additional documentation is in English.
+Drag matching widgets together to stack them. Switch cards with a **two-finger horizontal swipe** on the trackpad.
 
-![Widget Library rendered with clean defaults](docs/images/widget-library.png)
+[Install](#install) · [Desktop controls](#desktop-controls) · [Stacks and gestures](#stacks-and-gestures) · [Connect your apps](#widgets-that-need-your-settings) · [Ubuntu support](#ubuntu-support)
 
-*Clean-profile preview; card metrics are illustrative. No personal desktop or account content is shown.*
+![Widget Library with clean defaults](docs/images/widget-library.png)
 
-## Ubuntu support
-
-| Environment | Status |
-| --- | --- |
-| **Ubuntu 22.04 LTS, GNOME 42, Xorg, x86-64** | **Verified desktop environment** (tested on 22.04.5 LTS). Movement, deletion, resizing, themes and desktop-icon stacking were exercised here. |
-| Ubuntu 24.04 LTS, GNOME 46, **Xorg** | **Experimental / not desktop-verified.** Build from source and use a matching Blur my Shell version if you need blur. Automated package checks do not establish full desktop compatibility. |
-| Ubuntu 20.04 or older | Unsupported by this package; the default Python version is too old. |
-| Ubuntu Desktop 25.10 and newer, including 26.04 LTS, default GNOME session | Unsupported: these GNOME sessions are Wayland-only. XWayland is not a replacement for a full Xorg session for this package. |
-| Wayland sessions, other desktop environments or CPU architectures | Not verified or supported by this release. |
-
-**The verified support claim currently stops at Ubuntu 22.04.** Ubuntu 24.04 is an experimental target, not a promise of compatibility. See the [official Ubuntu GNOME/Xorg announcement](https://discourse.ubuntu.com/t/ubuntu-25-10-drops-support-for-gnome-on-xorg/62538) and [26.04 LTS release notes](https://documentation.ubuntu.com/release-notes/26.04/summary-for-lts-users/) for the Wayland transition.
-
-Check your session before installing:
-
-```bash
-echo "$XDG_SESSION_TYPE"  # must print x11
-```
-
-On supported Ubuntu installations, choose **Ubuntu on Xorg** from the login-screen session menu if needed. Do not install this package expecting the native desktop controls to work under Wayland.
+*Clean-profile preview with illustrative data. The current app interface is primarily Korean. This is an independent project, not an Apple product.*
 
 ## Install
 
@@ -38,70 +22,51 @@ Widget Library is a native desktop app. After installation, open **Widget Librar
 
 ### Recommended: install the Debian package
 
-Download `ubuntu-widget_2.0.0-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
+Download `ubuntu-widget_2.1.0-1_amd64.deb` from [GitHub Releases](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest). Open a terminal in the download folder and run:
 
 ```bash
-sudo apt install ./ubuntu-widget_2.0.0-1_amd64.deb
+sudo apt install ./ubuntu-widget_2.1.0-1_amd64.deb
 /usr/bin/ubuntu-widget
 ```
 
-APT installs the required runtime dependencies. **Rust and build tools are not required**: the patched Eww engine is included. Open **Widget Library / 위젯 보관함** from the application menu afterwards. Use Ubuntu 22.04 amd64 with an Xorg session; the support limits above also apply to the Debian package.
+APT installs the required runtime dependencies. **Rust and build tools are not required**: the patched Eww engine is included. Open **Widget Library / 위젯 보관함** from the application menu afterwards. Use Ubuntu 22.04 amd64 with an Xorg session; the [Ubuntu support](#ubuntu-support) limits also apply to the Debian package.
 
 The first launch creates your own configuration with an empty desktop. Package installation does not copy the developer's settings, access accounts, or enable autostart. Updates refresh program templates on your next launch and preserve notes, connections and layout. If you previously installed from source, remove that installation's launcher with `./scripts/uninstall.py` before switching to the Debian package; your configuration is kept.
 
 Release assets also include `SHA256SUMS` and the matching `*-source.tar.xz` archive containing patched Eww and vendored Cargo sources. See [packaging and rebuilding](docs/PACKAGING.md).
 
-### Widget stacks
+## Desktop controls
 
-- Add two or more widgets and give them the same width and height.
-- Select one in the library, choose **스택 만들기…**, then select the other matching widgets.
-- Click the small page counter at the bottom of the card, or scroll over it, to switch.
-- Move or resize the visible card; the next card inherits that position and size. Reopening keeps the active member.
-- Choose **스택 해제** in the library or context menu to restore the individual widgets to their previous positions.
+| Action | How |
+| --- | --- |
+| Add | Open **Widget Library / 위젯 보관함**, pick a widget and choose **바탕화면에 추가**. |
+| Move | Drag the widget body. Placement snaps to a 16 px grid. |
+| Resize | Drag either side to change width; use the inside lower-right corner for width and height. |
+| Stack | Drop a card over the middle of another card with the same width and height. |
+| Switch a stack | Swipe horizontally with two fingers over the card, or click/scroll its page counter. |
+| Split | Right-click → **스택 해제**, or use the library detail panel. |
+| Remove | Click the invisible inside upper-left corner, or remove it from the context menu/library. |
+| Restore | Add it again from the library; its saved content is preserved. |
 
-## Build and install from source
+Presets: Small **208 × 208**, Medium **320 × 224**, Large **432 × 352**. The minimum is **192 × 96** logical pixels. Short cards keep overflow content scrollable; narrow cards adapt their layout. Calendars start on Sunday.
 
-Runtime requirements: Python 3.10+, GTK 3, a full GNOME/Xorg session, and a working user systemd/D-Bus session.
+## Stacks and gestures
 
-Install runtime and build dependencies through Ubuntu's package manager:
+1. Give two widgets the same width and height. Choosing the same preset in the library is the quickest way.
+2. Drag one card over the other. A blue outline marks a matching drop target when the cards overlap by at least 65%.
+3. Release to create the stack at the target's position. Dropping onto an existing stack adds the card; dropping one stack onto another combines their members.
+4. Swipe horizontally with two fingers anywhere over the stack to switch. One continuous stroke advances one card. Vertical two-finger scrolling continues to scroll the widget's content.
 
-```bash
-sudo apt update
-sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
-  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
-  gir1.2-gtk-3.0 gir1.2-webkit2-4.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
-  gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
-  pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
-```
+The page counter remains available for mouse clicks and wheel input. Moving or resizing a stack keeps one shared placement and size, and restarting keeps the last active card. **스택 해제** restores each card's placement from before it joined the stack.
 
-Install a current stable Rust toolchain using [rustup's official instructions](https://rustup.rs/). Rust is needed to build the patched Eww engine, not for ordinary use afterwards.
+Use two-finger scrolling enabled in your system's touchpad settings. Switching follows the horizontal scroll direction supplied by the system, including its natural-scrolling preference.
 
-```bash
-git clone https://github.com/KweonTJ/Ubuntu_Widget.git
-cd Ubuntu_Widget
-./scripts/build-eww.sh
-./install.sh
-"$HOME/.local/bin/ubuntu-widget" edit
-```
+## New in 2.1
 
-- `build-eww.sh` fetches Eww commit `48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa`, checks and applies our native-control patch, and builds only its X11 backend. The script uses the installed **stable** Rust toolchain instead of the old toolchain pinned by upstream. `RUST_TOOLCHAIN` can select another installed toolchain.
-- A stock Eww binary does **not** implement the custom drag/resize attributes used by these widgets. Do not replace the patched engine with a distribution Eww package.
-- The Git repository contains source and the patch. Release Debian packages include an engine built from that source, without a developer's desktop backup. The initial desktop engine was verified with stable Rust 1.99.0 on Ubuntu 22.04.
-- If a build runs out of memory, retry with `CARGO_BUILD_JOBS=2 ./scripts/build-eww.sh`.
-- To use an already built **patched** binary, run `./install.sh --eww /path/to/eww`.
-- Add `--autostart` to install a login entry for widgets you have added. Autostart is otherwise off.
-- Installation is per-user and needs no `sudo`. It does not overwrite an unrelated Eww setup.
-
-Open **Widget Library / 위젯 보관함** from the application menu. A fresh installation starts with an empty desktop; select the widgets you want and click **바탕화면에 추가** (Add to desktop). Add-ons that require an account display a setup prompt until you connect your own account.
-
-## Version 2.0
-
-- A quieter native library with a sidebar, search and a dedicated settings pane; the iPhone connection guide has been removed.
-- Consistent light/dark materials and icons, live size-dependent typography, compact summaries and expanded detail layouts.
-- Obsidian note previews, native todomate tasks, KDE Connect file sharing, whole-card dragging and resizing from either edge.
-- Existing locally stored notes/tasks remain in your settings after upgrading, although the Note/To-do cards now connect to the named apps.
-
-See [design rationale](docs/DESIGN.md) and [validation](docs/VALIDATION.md).
+- Direct drop stacking, a matching-target outline and merging existing stacks.
+- Two-finger horizontal switching with one advance per continuous gesture; vertical content scrolling stays available.
+- Stack creation moved onto the desktop. The library keeps size, membership and split controls.
+- Existing Obsidian, todomate, KDE Connect, themes and personal settings are preserved. Locally stored legacy notes/tasks remain in your settings.
 
 ## Included widgets
 
@@ -116,17 +81,6 @@ See [design rationale](docs/DESIGN.md) and [validation](docs/VALIDATION.md).
 | Website shortcuts (8) | Notion, Naver Mail, Gmail, Google Calendar, Google Keep, YouTube, Spotify, GitHub |
 
 Website choices are launchers: they open the website, rather than embedding a signed-in page inside an Eww card. You can register additional URLs. Chrome or Chromium opens a standalone app window; other systems fall back to their default browser with `xdg-open`.
-
-## Move, resize and remove
-
-- **Move:** press and drag the widget body, including labels and scroll content. Movement snaps to a 16 px grid; buttons and other controls keep their normal actions.
-- **Change width:** drag either the left or right edge. The opposite edge stays fixed.
-- **Change width and height:** drag the inside lower-right corner.
-- **Remove:** click the **inside upper-left corner**, or use the right-click menu / library. The X icon and grip marks are intentionally invisible.
-- **Restore:** add the widget again from the library. Removing a card does not delete its saved content.
-- **Sizes:** Small `208 × 208`, Medium `320 × 224`, Large `432 × 352`; minimum `192 × 96` logical pixels. Scroll inside short cards to reach overflow content.
-- Narrow cards arrange their contents vertically. The calendar starts on **Sunday**.
-- Transparent desktop-icon windows are kept beneath the widget cards so they cannot block the controls. Widgets remain below normal application windows.
 
 ## Widgets that need your settings
 
@@ -211,6 +165,66 @@ Use **내용·시간 설정** (Content/time settings) or **연결·설정** (Con
 
 The todomate profile is stored under `.web-profile/todomate/` inside your user configuration. It contains sensitive login data: never commit, export or share that directory. Obsidian note paths live in `linked-apps.json`; no note content is copied into the package. On Ubuntu 24.04 source installations, install `gir1.2-webkit2-4.1` instead of the 22.04 WebKit package shown above.
 
+## Ubuntu support
+
+| Environment | Status |
+| --- | --- |
+| **Ubuntu 22.04 LTS, GNOME 42, Xorg, x86-64** | **Verified desktop environment** (tested on 22.04.5 LTS). Movement, deletion, resizing, themes and desktop-icon stacking were exercised here. |
+| Ubuntu 24.04 LTS, GNOME 46, **Xorg** | **Experimental / not desktop-verified.** Build from source and use a matching Blur my Shell version if you need blur. Automated package checks do not establish full desktop compatibility. |
+| Ubuntu 20.04 or older | Unsupported by this package; the default Python version is too old. |
+| Ubuntu Desktop 25.10 and newer, including 26.04 LTS, default GNOME session | Unsupported: these GNOME sessions are Wayland-only. XWayland is not a replacement for a full Xorg session for this package. |
+| Wayland sessions, other desktop environments or CPU architectures | Not verified or supported by this release. |
+
+**The verified support claim currently stops at Ubuntu 22.04.** Ubuntu 24.04 is an experimental target, not a promise of compatibility. See the [official Ubuntu GNOME/Xorg announcement](https://discourse.ubuntu.com/t/ubuntu-25-10-drops-support-for-gnome-on-xorg/62538) and [26.04 LTS release notes](https://documentation.ubuntu.com/release-notes/26.04/summary-for-lts-users/) for the Wayland transition.
+
+Check your session before installing:
+
+```bash
+echo "$XDG_SESSION_TYPE"  # must print x11
+```
+
+On supported Ubuntu installations, choose **Ubuntu on Xorg** from the login-screen session menu if needed. Do not install this package expecting the native desktop controls to work under Wayland.
+
+## Build from source
+
+<details>
+<summary>Build the patched Eww engine and install per user</summary>
+
+Runtime requirements: Python 3.10+, GTK 3, a full GNOME/Xorg session, and a working user systemd/D-Bus session.
+
+Install runtime and build dependencies through Ubuntu's package manager:
+
+```bash
+sudo apt update
+sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
+  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
+  gir1.2-gtk-3.0 gir1.2-webkit2-4.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
+  gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
+  pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
+```
+
+Install a current stable Rust toolchain using [rustup's official instructions](https://rustup.rs/). Rust is needed to build the patched Eww engine, not for ordinary use afterwards.
+
+```bash
+git clone https://github.com/KweonTJ/Ubuntu_Widget.git
+cd Ubuntu_Widget
+./scripts/build-eww.sh
+./install.sh
+"$HOME/.local/bin/ubuntu-widget" edit
+```
+
+- `build-eww.sh` fetches Eww commit `48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa`, checks and applies our native-control patch, and builds only its X11 backend. The script uses the installed **stable** Rust toolchain instead of the old toolchain pinned by upstream. `RUST_TOOLCHAIN` can select another installed toolchain.
+- A stock Eww binary does **not** implement the custom drag/resize attributes used by these widgets. Do not replace the patched engine with a distribution Eww package.
+- The Git repository contains source and the patch. Release Debian packages include an engine built from that source, without a developer's desktop backup. The initial desktop engine was verified with stable Rust 1.99.0 on Ubuntu 22.04.
+- If a build runs out of memory, retry with `CARGO_BUILD_JOBS=2 ./scripts/build-eww.sh`.
+- To use an already built **patched** binary, run `./install.sh --eww /path/to/eww`.
+- Add `--autostart` to install a login entry for widgets you have added. Autostart is otherwise off.
+- Installation is per-user and needs no `sudo`. It does not overwrite an unrelated Eww setup.
+
+Open **Widget Library / 위젯 보관함** from the application menu. A fresh installation starts with an empty desktop; select the widgets you want and click **바탕화면에 추가** (Add to desktop). Add-ons that require an account display a setup prompt until you connect your own account.
+
+</details>
+
 ## Personal data and storage
 
 The published defaults contain **no personal notes, events, watchlists, device IDs, private URLs, coordinates, window positions, API keys, browser data, usage history, recordings or local executables**.
@@ -276,8 +290,10 @@ This repository's original configuration, scripts, native patch and SVG artwork 
 ## Development checks
 
 ```bash
-/usr/bin/python3 -m unittest discover -s tests -v
-/usr/bin/python3 scripts/check_public.py
+make test
+make test-native
+make test-stacks
+make test-gestures  # Xvfb + Rust; builds the native smooth-scroll tests
 ```
 
 See [validation scope](docs/VALIDATION.md) for the desktop checks actually performed. CI checks the package on Ubuntu 22.04 and 24.04. These checks cover blank defaults, installation under different user paths, configuration preservation, API adapters with mock data and source-patch applicability. They do not replace desktop testing on each GNOME release.

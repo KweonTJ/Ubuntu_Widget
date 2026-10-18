@@ -340,7 +340,9 @@ class Gallery(Gtk.Application):
                 self.details.pack_start(hint,False,False,0)
                 self.details.pack_start(button('다음 위젯 보기',lambda:self.work(lambda:stacks.cycle(item['id']),'다음 위젯으로 전환했습니다.')),False,False,0)
                 self.details.pack_start(button('스택 해제',lambda:self.work(lambda:stacks.dissolve(item['id']),'각 위젯을 이전 위치로 되돌렸습니다.')),False,False,0)
-            else:self.details.pack_start(button('스택 만들기…',lambda:self.stack_dialog(item)),False,False,0)
+            else:
+                hint=label('같은 크기 위젯 위에 드래그해 놓으면 스택으로 묶입니다.','muted')
+                hint.set_line_wrap(True);hint.set_max_width_chars(26);self.details.pack_start(hint,False,False,0)
         if added:self.details.pack_start(button('바탕화면에서 제거',lambda:self.work(lambda:store.remove(item['id']),'바탕화면에서 제거했습니다.')),False,False,0)
         if item.get('configurable'):
             self.details.pack_start(button('노트 선택…' if item['kind']=='note' else 'todomate 연결…' if item['kind']=='todo' else '연결·설정' if item['kind'] in ('stocks','weather','home','screentime') else '내용·시간 설정',lambda:self.configure_dialog(item)),False,False,0)
@@ -350,27 +352,6 @@ class Gallery(Gtk.Application):
         self.details.pack_start(Gtk.Box(),True,True,0)
         tip=label('미리보기를 바탕화면으로 끌어 놓아도 추가할 수 있습니다.','muted');tip.set_line_wrap(True);tip.set_max_width_chars(28);self.details.pack_start(tip,False,False,0)
         self.details.show_all()
-    def stack_dialog(self,item):
-        peers=stacks.candidates(item['id'])
-        positions=store.read_json('positions.json',{});rect=stacks.rect(item['id'],positions)
-        dialog=Gtk.Dialog(title='위젯 스택',transient_for=self.window,modal=True)
-        dialog.set_default_size(380,320);dialog.add_button('취소',Gtk.ResponseType.CANCEL)
-        create=dialog.add_button('스택 만들기',Gtk.ResponseType.OK);create.set_sensitive(False)
-        box=dialog.get_content_area();box.set_border_width(20);box.set_spacing(10)
-        heading=label(f"{item['name']} · {rect['width']} × {rect['height']}");box.pack_start(heading,False,False,0)
-        hint=label('같은 크기의 위젯을 골라 한 자리에 묶으세요. 아래 표시를 클릭하거나 휠로 전환합니다.' if peers else '같은 크기의 위젯을 먼저 바탕화면에 추가해 주세요.');hint.set_line_wrap(True);hint.set_max_width_chars(38);box.pack_start(hint,False,False,0)
-        checks=[]
-        scroll=Gtk.ScrolledWindow();scroll.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.AUTOMATIC);scroll.set_min_content_height(120)
-        choices=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6);scroll.add(choices);box.pack_start(scroll,True,True,0)
-        for peer in peers:
-            check=Gtk.CheckButton(label=peer['name']);checks.append((peer['id'],check));choices.pack_start(check,False,False,0)
-            check.connect('toggled',lambda *_:create.set_sensitive(any(c.get_active() for _,c in checks)))
-        dialog.show_all()
-        if dialog.run()==Gtk.ResponseType.OK:
-            members=[item['id']]+[wid for wid,c in checks if c.get_active()];dialog.destroy()
-            self.work(lambda:stacks.create(members),'스택을 만들었습니다. 위젯 아래 숫자를 클릭하거나 휠로 전환하세요.')
-        else:dialog.destroy()
-
     def set_size(self,key):
         self.preset=key
         if hasattr(self,'dimensions'):

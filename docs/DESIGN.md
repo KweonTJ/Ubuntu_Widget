@@ -1,4 +1,4 @@
-# Design in 2.0
+# Widget design
 
 The design draws on Apple's [widgets](https://developer.apple.com/design/human-interface-guidelines/widgets), [sidebars](https://developer.apple.com/design/human-interface-guidelines/sidebars), [windows](https://developer.apple.com/design/human-interface-guidelines/windows), [buttons](https://developer.apple.com/design/human-interface-guidelines/buttons), and [typography](https://developer.apple.com/design/human-interface-guidelines/typography) guidance. This is an independent GTK/Xorg implementation, not Apple's WidgetKit or an Apple UI asset bundle.
 
@@ -13,4 +13,6 @@ todomate uses the same native list, typography, theme and responsive shell as th
 
 Glass and library previews share one tone mapping and palette. Small battery cards keep actual device icons and percentages rather than replacing Bluetooth devices with a hidden-device count. Overflow remains scrollable.
 
-Stacks group equal-sized widgets without duplicating content. Only the active member is mapped; switching transfers its current placement and size. A small counter provides click/wheel navigation. Splitting restores the original placements.
+Stacks group equal-sized widgets without duplicating content. Only the active member is mapped; switching transfers its current placement and size. A committed body drag with at least 65% overlap joins equal-sized cards or merges existing stacks. The target outline does not affect layout. The pre-drag position is retained for a later split.
+
+Two-finger horizontal scrolling is filtered before GTK dispatch only for an active stack. Gesture accumulation and a shared latch prevent repeated switching as the active window is replaced. Vertical events and unrelated input follow GTK's normal event path, so scrollable content and buttons retain their behavior. A small counter remains available for click/wheel navigation. Splitting restores original placements.

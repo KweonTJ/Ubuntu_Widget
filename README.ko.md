@@ -1,36 +1,20 @@
 # Ubuntu Widget
 
-[English](README.md) | **한국어**
+[English](README.md) · **한국어**
 
-[![패키지 검사](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/KweonTJ/Ubuntu_Widget)](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)
+[![Package checks](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/KweonTJ/Ubuntu_Widget/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**Ubuntu GNOME의 Xorg 환경**에서 사용하는 macOS 스타일의 바탕화면 위젯 보관함입니다. **기본 제공 항목 35개** 중에서 원하는 위젯을 골라 개별적으로 추가하고, 16 px 그리드에 맞춰 배치할 수 있습니다. 위젯은 둥근 모서리, 반응형 레이아웃, 라이트·다크 테마와 선택 가능한 글래스 효과를 공통으로 제공합니다.
+**Ubuntu GNOME의 Xorg 환경**에서 사용하는 바탕화면 위젯 앱입니다. 35가지 위젯·웹사이트 바로가기를 골라 그리드에 배치하고, 라이트·다크 테마와 선택 가능한 글래스 효과로 꾸밀 수 있습니다.
 
-Apple 제품이 아닌 독립적인 커뮤니티 프로젝트입니다. 현재 앱 화면은 주로 한국어로 제공됩니다. 영어 README는 위 언어 링크에서 볼 수 있으며, 추가 문서는 영어로 제공됩니다.
+같은 크기 위젯을 서로 겹쳐 놓아 스택으로 묶고, 트랙패드에서 **두 손가락을 가로로 밀어** 넘기세요.
 
-![개인정보가 없는 기본 설정으로 실행한 위젯 보관함](docs/images/widget-library.png)
+[설치](#설치) · [바탕화면 조작](#바탕화면-조작) · [스택과 제스처](#스택과-제스처) · [앱 연결](#사용자-설정이-필요한-위젯) · [Ubuntu 지원 범위](#ubuntu-지원-범위)
 
-*초기 설정 상태의 미리보기입니다. 카드의 수치는 예시이며, 개인 바탕화면이나 계정 정보는 포함하지 않습니다.*
+![초기 설정 상태의 위젯 보관함](docs/images/widget-library.png)
 
-## Ubuntu 지원 범위
-
-| 환경 | 지원 상태 |
-| --- | --- |
-| **Ubuntu 22.04 LTS, GNOME 42, Xorg, x86-64** | **바탕화면 동작 검증 완료**(22.04.5 LTS에서 테스트). 이동, 삭제, 크기 조절, 테마 및 바탕화면 아이콘과의 창 순서를 확인했습니다. |
-| Ubuntu 24.04 LTS, GNOME 46, **Xorg** | **실험적 지원 / 바탕화면 동작 미검증.** 소스에서 빌드해야 하며, 블러가 필요하면 해당 GNOME 버전에 맞는 Blur my Shell을 사용해야 합니다. 자동 패키지 검사만으로 전체 바탕화면 호환성을 보장하지 않습니다. |
-| Ubuntu 20.04 이하 | 지원하지 않습니다. 기본 Python 버전이 이 패키지의 요구 사항보다 낮습니다. |
-| Ubuntu Desktop 25.10 이후(26.04 LTS 포함)의 기본 GNOME 세션 | 지원하지 않습니다. 이 GNOME 세션은 Wayland만 지원합니다. 이 패키지에서 XWayland는 전체 Xorg 세션을 대체할 수 없습니다. |
-| Wayland 세션, 다른 데스크톱 환경 또는 CPU 아키텍처 | 이번 릴리스에서 검증하거나 지원하지 않습니다. |
-
-**현재 실제 바탕화면 동작을 검증한 버전은 Ubuntu 22.04까지입니다.** Ubuntu 24.04는 실험 대상이며 호환성을 보장하지 않습니다. Wayland 전환에 관한 내용은 [Ubuntu의 GNOME/Xorg 공식 안내](https://discourse.ubuntu.com/t/ubuntu-25-10-drops-support-for-gnome-on-xorg/62538)와 [26.04 LTS 릴리스 노트](https://documentation.ubuntu.com/release-notes/26.04/summary-for-lts-users/)를 참고하세요.
-
-설치 전에 현재 세션을 확인하세요.
-
-```bash
-echo "$XDG_SESSION_TYPE"  # x11이 출력되어야 합니다
-```
-
-지원되는 Ubuntu 환경에서는 필요에 따라 로그인 화면의 세션 메뉴에서 **Ubuntu on Xorg**를 선택하세요. Wayland에서는 위젯의 기본 이동·크기 조절 기능이 정상 동작하지 않습니다.
+*개인 계정·바탕화면 정보가 없는 예시 화면입니다. 현재 앱 화면은 주로 한국어이며, Apple 제품이 아닌 독립 프로젝트입니다.*
 
 ## 설치
 
@@ -38,10 +22,10 @@ echo "$XDG_SESSION_TYPE"  # x11이 출력되어야 합니다
 
 ### 권장: Debian 패키지로 설치
 
-[GitHub 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)에서 `ubuntu-widget_2.0.0-1_amd64.deb`를 내려받으세요. 다운로드한 폴더에서 터미널을 열고 실행하세요.
+[GitHub 릴리즈](https://github.com/KweonTJ/Ubuntu_Widget/releases/latest)에서 `ubuntu-widget_2.1.0-1_amd64.deb`를 내려받으세요. 다운로드한 폴더에서 터미널을 열고 실행하세요.
 
 ```bash
-sudo apt install ./ubuntu-widget_2.0.0-1_amd64.deb
+sudo apt install ./ubuntu-widget_2.1.0-1_amd64.deb
 /usr/bin/ubuntu-widget
 ```
 
@@ -51,49 +35,38 @@ APT가 필요한 실행 의존성을 함께 설치합니다. 패치된 Eww 엔�
 
 릴리즈에는 `SHA256SUMS`와 해당 빌드의 `*-source.tar.xz`도 함께 제공합니다. 소스 압축 파일에는 패치된 Eww와 Cargo 의존성 소스가 포함됩니다. [패키지 관리 및 재빌드 안내](docs/PACKAGING.md)를 참고하세요.
 
-### 소스에서 빌드하여 설치
+## 바탕화면 조작
 
-실행 요구 사항: Python 3.10 이상, GTK 3, 전체 GNOME/Xorg 세션, 정상 동작하는 사용자 systemd/D-Bus 세션.
+| 기능 | 사용 방법 |
+| --- | --- |
+| 추가 | **위젯 보관함**에서 원하는 위젯을 골라 **바탕화면에 추가**를 누릅니다. |
+| 이동 | 위젯 본문을 드래그합니다. 16 px 그리드에 맞춰 배치됩니다. |
+| 크기 조절 | 양쪽 가장자리로 가로폭을, 안쪽 오른쪽 아래 모서리로 가로·세로를 조절합니다. |
+| 스택 | 가로·세로가 같은 다른 위젯의 가운데로 드래그해 놓습니다. |
+| 스택 전환 | 카드 위에서 두 손가락을 가로로 밀거나, 아래 페이지 숫자를 클릭·휠로 조작합니다. |
+| 스택 해제 | 오른쪽 클릭 → **스택 해제**, 또는 보관함의 상세 화면에서 해제합니다. |
+| 삭제 | 표시가 없는 안쪽 왼쪽 위 모서리를 클릭하거나 메뉴·보관함에서 제거합니다. |
+| 복원 | 보관함에서 다시 추가합니다. 저장된 내용은 유지됩니다. |
 
-Ubuntu 패키지 관리자로 실행 및 빌드 의존성을 설치하세요.
+기본 크기는 작게 **208 × 208**, 중간 **320 × 224**, 크게 **432 × 352**이며 최소 **192 × 96** 논리 픽셀까지 조절할 수 있습니다. 짧은 위젯의 넘치는 내용은 스크롤로 보고, 좁은 위젯은 내부 배치를 조정합니다. 달력은 일요일부터 시작합니다.
 
-```bash
-sudo apt update
-sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
-  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
-  gir1.2-gtk-3.0 gir1.2-webkit2-4.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
-  gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
-  pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
-```
+## 스택과 제스처
 
-[rustup 공식 안내](https://rustup.rs/)에 따라 최신 stable Rust 도구 모음을 설치하세요. Rust는 패치된 Eww 엔진을 빌드할 때 필요하며, 빌드 후 일반적인 사용에는 필요하지 않습니다.
+1. 위젯 두 개의 가로·세로 크기를 같게 맞춥니다. 보관함에서 같은 기본 크기를 선택하면 편합니다.
+2. 한 위젯을 다른 위젯 위로 드래그합니다. 65% 이상 포개지면 놓을 수 있는 대상에 파란 테두리가 나타납니다.
+3. 손을 놓으면 대상 위치에 스택이 만들어집니다. 기존 스택에 위젯을 추가하거나 스택끼리 합칠 수도 있습니다.
+4. 스택 위 어디에서나 두 손가락을 가로로 밀어 전환합니다. 한 번의 연속 동작으로 한 장씩 넘어가며, 세로 두 손가락 스크롤은 위젯 안의 내용을 스크롤합니다.
 
-```bash
-git clone https://github.com/KweonTJ/Ubuntu_Widget.git
-cd Ubuntu_Widget
-./scripts/build-eww.sh
-./install.sh
-"$HOME/.local/bin/ubuntu-widget" edit
-```
+아래 페이지 숫자의 클릭·마우스 휠 전환도 사용할 수 있습니다. 스택 이동·크기는 함께 유지되고, 다시 실행해도 마지막 위젯을 표시합니다. **스택 해제**를 누르면 각각 스택에 들어가기 전 위치로 돌아갑니다.
 
-- `build-eww.sh`는 Eww 커밋 `48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa`를 가져와 이동·크기 조절 패치를 검사하고 적용한 뒤, X11 백엔드만 빌드합니다. 원본 프로젝트에 고정된 오래된 도구 모음 대신 설치된 **stable** Rust 도구 모음을 사용합니다. `RUST_TOOLCHAIN`으로 다른 설치된 도구 모음을 선택할 수 있습니다.
-- 일반 Eww 바이너리에는 이 위젯에서 사용하는 사용자 정의 이동·크기 조절 속성이 **구현되어 있지 않습니다**. 패치된 엔진을 배포판의 Eww 패키지로 대체하지 마세요.
-- Git 저장소에는 소스와 패치를 보관합니다. 릴리즈의 Debian 패키지에는 해당 소스로 빌드한 엔진을 포함하며 개발자의 바탕화면 백업은 포함하지 않습니다. 최초 바탕화면 검증에는 Ubuntu 22.04와 stable Rust 1.99.0을 사용했습니다.
-- 빌드 중 메모리가 부족하면 `CARGO_BUILD_JOBS=2 ./scripts/build-eww.sh`로 다시 시도하세요.
-- 이미 빌드한 **패치 적용 바이너리**가 있다면 `./install.sh --eww /path/to/eww`로 설치할 수 있습니다.
-- 추가한 위젯을 로그인할 때 자동으로 실행하려면 설치 명령에 `--autostart`를 붙이세요. 기본값은 자동 실행 꺼짐입니다.
-- 사용자별로 설치되며 설치 스크립트 실행에 `sudo`가 필요하지 않습니다. 별도로 사용 중인 다른 Eww 설정을 덮어쓰지 않습니다.
+시스템 터치패드 설정에서 두 손가락 스크롤을 켜세요. 전환 방향은 자연스러운 스크롤 설정을 포함해 시스템이 전달하는 가로 스크롤 방향을 따릅니다.
 
-앱 메뉴에서 **Widget Library / 위젯 보관함**을 실행하세요. 처음 설치하면 바탕화면에 위젯이 없는 상태로 시작합니다. 원하는 위젯을 선택하고 **바탕화면에 추가**를 누르세요. 계정이 필요한 위젯은 본인의 계정을 연결하기 전까지 설정 안내를 표시합니다.
+## 2.1의 변경 사항
 
-## 버전 2.0
-
-- 사이드바·검색·상세 설정 중심의 보관함으로 정리하고 아이폰 연결 안내를 제거했습니다.
-- 라이트·다크 배경과 아이콘을 통일하고 실제 크기에 따라 글자·링·달력 칸·정보 밀도가 달라집니다.
-- Obsidian 노트, todomate 오늘 할 일, KDE Connect 파일 공유를 지원합니다. 위젯 본문 이동과 양쪽 가장자리 크기 조절도 포함합니다.
-- 업데이트 후 기존 로컬 메모·할 일 데이터는 설정 파일에 남습니다. 해당 카드는 이제 각 앱에 연결됩니다.
-
-[디자인 근거](docs/DESIGN.md)와 [검증 기록](docs/VALIDATION.md)을 참고하세요.
+- 바탕화면에서 바로 드래그해 스택을 만들고, 대상 표시와 기존 스택 합치기를 지원합니다.
+- 두 손가락 가로 제스처로 한 번에 한 장씩 전환하며 세로 내용 스크롤은 유지합니다.
+- 스택 생성은 바탕화면에서 진행하고, 보관함에서는 크기·구성 확인과 해제를 관리합니다.
+- Obsidian·todomate·KDE Connect 연결과 테마·개인 설정을 유지합니다. 이전 로컬 메모·할 일 데이터도 설정에 남아 있습니다.
 
 ## 제공 위젯
 
@@ -108,17 +81,6 @@ cd Ubuntu_Widget
 | 웹사이트 바로가기(8개) | Notion, 네이버 메일, Gmail, Google Calendar, Google Keep, YouTube, Spotify, GitHub |
 
 웹사이트 항목은 사이트를 여는 실행기입니다. 로그인한 웹페이지를 Eww 카드 안에 내장하지 않습니다. 원하는 URL을 추가로 등록할 수 있습니다. Chrome 또는 Chromium이 있으면 독립된 앱 창으로 열고, 그 외에는 `xdg-open`으로 기본 브라우저를 실행합니다.
-
-## 이동·크기 조절·삭제
-
-- **이동:** 위젯 본문을 누른 채 드래그하세요. 글자와 스크롤 영역에서도 이동할 수 있으며 16 px 그리드에 맞춥니다. 버튼 등 조작 요소는 원래 기능을 유지합니다.
-- **가로폭 조절:** 왼쪽 또는 오른쪽 가장자리를 드래그하세요. 반대편 가장자리는 고정됩니다.
-- **가로·세로 크기 조절:** 안쪽 오른쪽 하단 모서리를 드래그하세요.
-- **삭제:** **안쪽 왼쪽 상단 모서리**를 클릭하거나, 마우스 오른쪽 버튼 메뉴 또는 보관함을 사용하세요. X 아이콘과 이동·크기 조절 표시는 보이지 않도록 되어 있습니다.
-- **복원:** 보관함에서 위젯을 다시 추가하세요. 위젯을 삭제해도 저장된 내용은 지워지지 않습니다.
-- **크기:** 작게 `208 × 208`, 중간 `320 × 224`, 크게 `432 × 352`, 최소 `192 × 96` 논리 픽셀입니다. 높이가 낮은 카드에서 넘치는 내용은 카드 안을 스크롤해 볼 수 있습니다.
-- 가로폭이 좁아지면 내용이 세로로 정렬됩니다. 달력은 **일요일부터** 시작합니다.
-- 바탕화면 아이콘용 투명 창이 조작을 가리지 않도록 위젯 아래에 유지합니다. 위젯은 일반 앱 창보다 아래에 표시됩니다.
 
 ## 사용자 설정이 필요한 위젯
 
@@ -203,13 +165,65 @@ cd Ubuntu_Widget
 
 todomate 로그인 데이터는 사용자 위젯 설정의 `.web-profile/todomate/`에 저장됩니다. 이 폴더는 커밋·공유·배포하지 마세요. Obsidian 노트 경로는 `linked-apps.json`에 저장하며 노트 내용을 패키지에 복사하지 않습니다. Ubuntu 24.04에서 소스로 설치할 때는 위 22.04용 WebKit 패키지 대신 `gir1.2-webkit2-4.1`을 설치하세요.
 
-## 위젯 스택
+## Ubuntu 지원 범위
 
-- 위젯을 두 개 이상 추가하고 가로·세로 크기를 같게 맞춥니다.
-- 보관함에서 하나를 선택하고 **스택 만들기…**를 눌러 함께 묶을 위젯들을 고릅니다.
-- 위젯 아래 작은 페이지 숫자를 클릭하거나 그 위에서 마우스 휠을 돌려 전환합니다.
-- 보이는 위젯을 이동하거나 크기를 바꾸면 다음 위젯도 같은 위치·크기로 표시됩니다. 다시 실행해도 마지막 위젯을 유지합니다.
-- 보관함이나 오른쪽 클릭 메뉴의 **스택 해제**를 누르면 개별 위젯이 이전 위치로 돌아갑니다.
+| 환경 | 지원 상태 |
+| --- | --- |
+| **Ubuntu 22.04 LTS, GNOME 42, Xorg, x86-64** | **바탕화면 동작 검증 완료**(22.04.5 LTS에서 테스트). 이동, 삭제, 크기 조절, 테마 및 바탕화면 아이콘과의 창 순서를 확인했습니다. |
+| Ubuntu 24.04 LTS, GNOME 46, **Xorg** | **실험적 지원 / 바탕화면 동작 미검증.** 소스에서 빌드해야 하며, 블러가 필요하면 해당 GNOME 버전에 맞는 Blur my Shell을 사용해야 합니다. 자동 패키지 검사만으로 전체 바탕화면 호환성을 보장하지 않습니다. |
+| Ubuntu 20.04 이하 | 지원하지 않습니다. 기본 Python 버전이 이 패키지의 요구 사항보다 낮습니다. |
+| Ubuntu Desktop 25.10 이후(26.04 LTS 포함)의 기본 GNOME 세션 | 지원하지 않습니다. 이 GNOME 세션은 Wayland만 지원합니다. 이 패키지에서 XWayland는 전체 Xorg 세션을 대체할 수 없습니다. |
+| Wayland 세션, 다른 데스크톱 환경 또는 CPU 아키텍처 | 이번 릴리스에서 검증하거나 지원하지 않습니다. |
+
+**현재 실제 바탕화면 동작을 검증한 버전은 Ubuntu 22.04까지입니다.** Ubuntu 24.04는 실험 대상이며 호환성을 보장하지 않습니다. Wayland 전환에 관한 내용은 [Ubuntu의 GNOME/Xorg 공식 안내](https://discourse.ubuntu.com/t/ubuntu-25-10-drops-support-for-gnome-on-xorg/62538)와 [26.04 LTS 릴리스 노트](https://documentation.ubuntu.com/release-notes/26.04/summary-for-lts-users/)를 참고하세요.
+
+설치 전에 현재 세션을 확인하세요.
+
+```bash
+echo "$XDG_SESSION_TYPE"  # x11이 출력되어야 합니다
+```
+
+지원되는 Ubuntu 환경에서는 필요에 따라 로그인 화면의 세션 메뉴에서 **Ubuntu on Xorg**를 선택하세요. Wayland에서는 위젯의 기본 이동·크기 조절 기능이 정상 동작하지 않습니다.
+
+## 소스에서 빌드
+
+<details>
+<summary>패치된 Eww 엔진을 빌드하고 사용자별로 설치하기</summary>
+
+실행 요구 사항: Python 3.10 이상, GTK 3, 전체 GNOME/Xorg 세션, 정상 동작하는 사용자 systemd/D-Bus 세션.
+
+Ubuntu 패키지 관리자로 실행 및 빌드 의존성을 설치하세요.
+
+```bash
+sudo apt update
+sudo apt install git build-essential pkg-config libgtk-3-dev libdbusmenu-gtk3-dev \
+  python3 python3-gi python3-gi-cairo python3-cairo python3-dbus tzdata \
+  gir1.2-gtk-3.0 gir1.2-webkit2-4.0 gir1.2-secret-1 gnome-keyring libx11-6 libxss1 libxtst6 \
+  gsettings-desktop-schemas dconf-gsettings-backend librsvg2-common x11-utils \
+  pulseaudio-utils libnotify-bin xdg-utils fonts-noto-cjk
+```
+
+[rustup 공식 안내](https://rustup.rs/)에 따라 최신 stable Rust 도구 모음을 설치하세요. Rust는 패치된 Eww 엔진을 빌드할 때 필요하며, 빌드 후 일반적인 사용에는 필요하지 않습니다.
+
+```bash
+git clone https://github.com/KweonTJ/Ubuntu_Widget.git
+cd Ubuntu_Widget
+./scripts/build-eww.sh
+./install.sh
+"$HOME/.local/bin/ubuntu-widget" edit
+```
+
+- `build-eww.sh`는 Eww 커밋 `48f5aa8b379adf29da0b0bb9ca04164f65d8bdaa`를 가져와 이동·크기 조절 패치를 검사하고 적용한 뒤, X11 백엔드만 빌드합니다. 원본 프로젝트에 고정된 오래된 도구 모음 대신 설치된 **stable** Rust 도구 모음을 사용합니다. `RUST_TOOLCHAIN`으로 다른 설치된 도구 모음을 선택할 수 있습니다.
+- 일반 Eww 바이너리에는 이 위젯에서 사용하는 사용자 정의 이동·크기 조절 속성이 **구현되어 있지 않습니다**. 패치된 엔진을 배포판의 Eww 패키지로 대체하지 마세요.
+- Git 저장소에는 소스와 패치를 보관합니다. 릴리즈의 Debian 패키지에는 해당 소스로 빌드한 엔진을 포함하며 개발자의 바탕화면 백업은 포함하지 않습니다. 최초 바탕화면 검증에는 Ubuntu 22.04와 stable Rust 1.99.0을 사용했습니다.
+- 빌드 중 메모리가 부족하면 `CARGO_BUILD_JOBS=2 ./scripts/build-eww.sh`로 다시 시도하세요.
+- 이미 빌드한 **패치 적용 바이너리**가 있다면 `./install.sh --eww /path/to/eww`로 설치할 수 있습니다.
+- 추가한 위젯을 로그인할 때 자동으로 실행하려면 설치 명령에 `--autostart`를 붙이세요. 기본값은 자동 실행 꺼짐입니다.
+- 사용자별로 설치되며 설치 스크립트 실행에 `sudo`가 필요하지 않습니다. 별도로 사용 중인 다른 Eww 설정을 덮어쓰지 않습니다.
+
+앱 메뉴에서 **Widget Library / 위젯 보관함**을 실행하세요. 처음 설치하면 바탕화면에 위젯이 없는 상태로 시작합니다. 원하는 위젯을 선택하고 **바탕화면에 추가**를 누르세요. 계정이 필요한 위젯은 본인의 계정을 연결하기 전까지 설정 안내를 표시합니다.
+
+</details>
 
 ## 개인정보와 저장 위치
 
@@ -276,8 +290,10 @@ Apple의 iPhone 연속성 위젯은 **Ubuntu에서 사용할 수 없습니다**.
 ## 개발 시 검사
 
 ```bash
-/usr/bin/python3 -m unittest discover -s tests -v
-/usr/bin/python3 scripts/check_public.py
+make test
+make test-native
+make test-stacks
+make test-gestures  # Xvfb와 Rust로 네이티브 연속 스크롤 검사
 ```
 
 실제로 수행한 바탕화면 검증은 [검증 범위](docs/VALIDATION.md)를 참고하세요. CI는 Ubuntu 22.04와 24.04에서 패키지를 검사합니다. 초기 기본 설정, 다른 사용자 경로에서의 설치, 사용자 설정 보존, 모의 데이터를 사용한 API 어댑터, 소스 패치 적용 여부를 확인합니다. 이 검사는 GNOME 버전별 실제 바탕화면 테스트를 대신하지 않습니다.

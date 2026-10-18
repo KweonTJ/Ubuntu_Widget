@@ -119,10 +119,13 @@
   (box :class {(theme == "dark" ? "movable-canvas eww-dark" : "movable-canvas eww-light") + " widget-" + name + (glass.enabled ? " glass-master-on" : "") + (services.tracking ? " usage-recording" : "")} :orientation "v" :space-evenly false
     (overlay :hexpand true :vexpand true
       (eventbox :drag-window true :drag-grid 16
+        :onwindowdrop "./scripts/stacks.py drop ${name} {0} {1} {2} {3} {4} {5}"
+        :window-swipe {(stacks[name + "-count"] ?: 0) > 1}
+        :onwindowswipe "./scripts/stacks.py swipe ${name} {}"
         :onrightclick "./scripts/manager-launch.py menu ${name}" :timeout "2s"
         (box :orientation "v" :space-evenly false :vexpand true (children)))
       (eventbox :visible {(stacks[name + "-count"] ?: 0) > 1} :halign "center" :valign "end" :onscroll "./scripts/stacks.py {} ${name}" :timeout "3s"
-       (button :class "stack-indicator" :timeout "3s" :tooltip "클릭 또는 휠로 스택 전환" :onclick "./scripts/stacks.py next ${name}"
+       (button :class "stack-indicator" :timeout "3s" :tooltip "클릭·휠 또는 본문에서 두 손가락 가로 스와이프로 전환" :onclick "./scripts/stacks.py next ${name}"
         (label :text {stacks[name + "-label"] ?: ""})))
       (button :class "close-widget" :halign "start" :valign "start" :style "margin: 6px;"
         :tooltip "위젯 지우기 · 앱 메뉴에서 복원 가능" :onclick "./scripts/windows.py remove ${name}"

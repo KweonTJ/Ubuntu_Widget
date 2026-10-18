@@ -28,10 +28,10 @@ index 616c387..b716fde 100644
      Ok(if buf.is_empty() {
 diff --git a/crates/eww/src/draggable.rs b/crates/eww/src/draggable.rs
 new file mode 100644
-index 0000000..d374995
+index 0000000..a778c91
 --- /dev/null
 +++ b/crates/eww/src/draggable.rs
-@@ -0,0 +1,343 @@
+@@ -0,0 +1,526 @@
 +//! Native X11 desktop-widget movement and resizing in GDK logical coordinates.
 +use gtk::{gdk, glib, prelude::*};
 +use serde::{Deserialize, Serialize};
@@ -221,7 +221,22 @@ index 0000000..d374995
 +    gesture.last_event(gesture.current_sequence().as_ref())?.root_coords()
 +}
 +
-+pub fn install(handle: &gtk::EventBox, grid: i32) {
++fn drop_outline(source: Option<&gtk::Window>) {
++    for widget in gtk::Window::list_toplevels() {
++        let Ok(target) = widget.downcast::<gtk::Window>() else { continue };
++        let matches = source.is_some_and(|source| {
++            if source == &target || !target.is_mapped() || !is_movable(&target) || source.size() != target.size() { return false; }
++            let a = position(source); let b = position(&target); let (w,h) = source.size();
++            let area = (a.x+w).min(b.x+w).saturating_sub(a.x.max(b.x)).max(0) as f64
++                     * (a.y+h).min(b.y+h).saturating_sub(a.y.max(b.y)).max(0) as f64;
++            area / (w.max(1) as f64 * h.max(1) as f64) >= 0.65
++        });
++        let context = target.style_context();
++        if matches { context.add_class("stack-drop-target"); } else { context.remove_class("stack-drop-target"); }
++    }
++}
++
++pub fn install(handle: &gtk::EventBox, grid: i32, on_drop: impl Fn([i32; 6]) + 'static) {
 +    let drag: Rc<RefCell<Option<Drag>>> = Rc::new(RefCell::new(None));
 +    handle.add_events(
 +        gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK | gdk::EventMask::POINTER_MOTION_MASK,
@@ -264,18 +279,22 @@ index 0000000..d374995
 +                x: state.origin.x + (x - state.pointer.0).round() as i32,
 +                y: state.origin.y + (y - state.pointer.1).round() as i32,
 +            }, grid));
++            drop_outline(Some(&window));
 +        }
 +    }));
 +    gesture.connect_drag_end(glib::clone!(@weak handle, @strong drag => move |_, _, _| {
 +        let state = drag.borrow_mut().take();
-+        if state.is_some_and(|s| s.active) {
++        drop_outline(None);
++        if let Some(state) = state.filter(|s| s.active) {
 +            if let Some(window) = top(&handle) {
 +                move_to(&window, snap(&window, position(&window), grid));
 +                save(&window);
++                let p = position(&window); let (width,height) = window.size();
++                on_drop([state.origin.x,state.origin.y,p.x,p.y,width,height]);
 +            }
 +        }
 +    }));
-+    gesture.connect_cancel(move |_, _| { *drag.borrow_mut() = None; });
++    gesture.connect_cancel(move |_, _| { *drag.borrow_mut() = None; drop_outline(None); });
 +    // Event controllers must live for as long as their widget, without a
 +    // strong reference back to the widget in any of the signal closures.
 +    unsafe { handle.set_data("eww-window-drag-gesture", gesture); }
@@ -375,6 +394,170 @@ index 0000000..d374995
 +        glib::Propagation::Proceed
 +    });
 +}
++
++const SWIPE_BINDING: &str = "eww-native-stack-swipe";
++struct SwipeBinding {
++    enabled: bool,
++    action: Rc<dyn Fn(&str)>,
++}
++
++/// Shared across member windows: closing one card must not turn the remainder
++/// of a single touchpad stroke into a second switch in the newly mapped card.
++#[derive(Default)]
++struct SwipeMotion {
++    x: f64,
++    y: f64,
++    axis: u8,
++    fired: bool,
++    last_time: Option<u32>,
++    last_fire: Option<u32>,
++}
++impl SwipeMotion {
++    fn feed(&mut self, dx: f64, dy: f64, time: u32) -> (bool, Option<&'static str>) {
++        if !dx.is_finite() || !dy.is_finite() { return (false,None); }
++        if self.last_time.is_none_or(|last| time.wrapping_sub(last)>220) {
++            self.x=0.0; self.y=0.0; self.axis=0; self.fired=false;
++        }
++        self.last_time=Some(time); self.x+=dx; self.y+=dy;
++        if self.axis==0 && self.x.abs().max(self.y.abs())>=0.35 {
++            if self.x.abs()>self.y.abs()*1.6 { self.axis=1; }
++            else if self.y.abs()>self.x.abs()*1.6 { self.axis=2; }
++        }
++        let horizontal=self.axis==1;
++        if horizontal && !self.fired && self.x.abs()>=1.5
++            && self.last_fire.is_none_or(|last| time.wrapping_sub(last)>=420) {
++            self.fired=true; self.last_fire=Some(time);
++            return (true,Some(if self.x>0.0 { "next" } else { "prev" }));
++        }
++        (horizontal,None)
++    }
++}
++thread_local! {
++    static SWIPE_ROUTER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
++    static SWIPE_MOTION: RefCell<SwipeMotion> = RefCell::new(SwipeMotion::default());
++}
++fn route_stack_scroll(event: &mut gdk::Event) -> bool {
++    let Some(scroll)=event.downcast_ref::<gdk::EventScroll>() else { return false };
++    if scroll.direction()!=gdk::ScrollDirection::Smooth { return false; }
++    let (dx,dy)=scroll.delta(); let time=scroll.time();
++    let Some(widget)=gtk::event_widget(event) else { return false };
++    let Some(window)=widget.toplevel().and_then(|w|w.downcast::<gtk::Window>().ok()) else { return false };
++    let binding=unsafe { window.data::<Rc<RefCell<SwipeBinding>>>(SWIPE_BINDING).map(|p|p.as_ref().clone()) };
++    let Some(binding)=binding else { return false };
++    let binding=binding.borrow();
++    if !binding.enabled { return false; }
++    let (handled,direction)=SWIPE_MOTION.with(|state|state.borrow_mut().feed(dx,dy,time));
++    if let Some(direction)=direction { (binding.action)(direction); }
++    handled
++}
++
++pub fn configure_swipe(handle: &gtk::EventBox, enabled: bool, action: impl Fn(&str)+'static) {
++    let existing=unsafe { handle.data::<Rc<RefCell<SwipeBinding>>>(SWIPE_BINDING).map(|p|p.as_ref().clone()) };
++    if let Some(existing)=existing {
++        *existing.borrow_mut()=SwipeBinding { enabled,action:Rc::new(action) }; return;
++    }
++    handle.add_events(gdk::EventMask::SCROLL_MASK | gdk::EventMask::SMOOTH_SCROLL_MASK);
++    let binding=Rc::new(RefCell::new(SwipeBinding { enabled,action:Rc::new(action) }));
++    unsafe { handle.set_data(SWIPE_BINDING,binding.clone()); }
++    let mapped=binding.clone();
++    handle.connect_map(move |handle| {
++        if let Some(window)=top(handle) {
++            window.add_events(gdk::EventMask::SCROLL_MASK | gdk::EventMask::SMOOTH_SCROLL_MASK);
++            unsafe { window.set_data(SWIPE_BINDING,mapped.clone()); }
++        }
++    });
++    if handle.is_mapped() {
++        if let Some(window)=top(handle) { unsafe { window.set_data(SWIPE_BINDING,binding); } }
++    }
++    SWIPE_ROUTER.with(|installed| {
++        if installed.replace(true) { return; }
++        // GTK's scroll controller consumes vertical events even with only its
++        // horizontal flag set. Filter just stack strokes before GTK dispatch;
++        // every unrelated/vertical event follows GTK's original normal path.
++        gdk::Event::set_handler(Some(|event: &mut gdk::Event| {
++            if !route_stack_scroll(event) { gtk::main_do_event(event); }
++        }));
++    });
++}
++
++#[cfg(test)]
++mod stack_motion_tests {
++    use super::*;
++    #[test]
++    fn one_horizontal_switch_per_continuous_stroke_and_inertia() {
++        let mut motion=SwipeMotion::default(); let mut actions=Vec::new();
++        for t in (1000..2000).step_by(20) { if let Some(d)=motion.feed(0.4,0.03,t).1 { actions.push(d); } }
++        assert_eq!(actions,vec!["next"]);
++        assert_eq!(motion.feed(0.0,0.0,2000).1,None);
++        assert_eq!(motion.feed(-2.0,0.0,2500).1,Some("prev"));
++    }
++    #[test]
++    fn vertical_scroll_and_small_or_diagonal_noise_never_switch() {
++        let mut motion=SwipeMotion::default();
++        for t in (1000..2000).step_by(20) { assert_eq!(motion.feed(0.02,0.4,t),(false,None)); }
++        assert_eq!(motion.feed(0.1,0.0,2500).1,None);
++        let mut diagonal=SwipeMotion::default();
++        for t in (1000..2000).step_by(20) { assert_eq!(diagonal.feed(0.3,0.3,t),(false,None)); }
++    }
++    #[test]
++    fn gtk_dispatch_preserves_vertical_scrolling_and_latches_across_windows() {
++        use glib::translate::*;
++        gtk::init().expect("Run this test on Xvfb");
++        let actions=Rc::new(RefCell::new(Vec::<String>::new()));
++        fn drain() { for _ in 0..8 { while gtk::events_pending() { gtk::main_iteration_do(false); } std::thread::sleep(Duration::from_millis(10)); } }
++        fn card(actions: Rc<RefCell<Vec<String>>>) -> (gtk::Window,gtk::ScrolledWindow) {
++            let window=gtk::Window::new(gtk::WindowType::Toplevel);window.set_default_size(320,224);
++            let handle=gtk::EventBox::new();
++            let scroll=gtk::ScrolledWindow::new(None::<&gtk::Adjustment>,None::<&gtk::Adjustment>);
++            let label=gtk::Label::new(Some("Scrollable task content"));label.set_size_request(250,1200);
++            scroll.add(&label);handle.add(&scroll);window.add(&handle);
++            configure_swipe(&handle,true,move |direction|actions.borrow_mut().push(direction.into()));
++            window.show_all();drain();(window,scroll)
++        }
++        fn send(window: &gtk::Window,dx: f64,dy: f64,time: u32) {
++            let mut event=gdk::Event::new(gdk::EventType::Scroll);
++            let display=gdk::Display::default().unwrap();
++            event.set_device(display.default_seat().and_then(|s|s.pointer()).as_ref());
++            unsafe {
++                let ptr: *mut gdk::ffi::GdkEvent=event.to_glib_none_mut().0;
++                (*ptr).scroll.window=window.window().unwrap().to_glib_full();
++                (*ptr).scroll.direction=gdk::ffi::GDK_SCROLL_SMOOTH;
++                (*ptr).scroll.time=time;(*ptr).scroll.x=40.0;(*ptr).scroll.y=40.0;
++                (*ptr).scroll.delta_x=dx;(*ptr).scroll.delta_y=dy;
++            }
++            event.put();drain();
++        }
++        let (first,_)=card(actions.clone());
++        for i in 0..5 { send(&first,0.4,0.01,1000+i*20); }
++        assert_eq!(*actions.borrow(),vec!["next"]);
++        unsafe { first.destroy(); }
++        let (second,scroll)=card(actions.clone());
++        for i in 0..8 { send(&second,0.4,0.01,1100+i*20); }
++        assert_eq!(*actions.borrow(),vec!["next"],"The rest of one stroke must not flip the new member");
++        send(&second,-2.0,0.0,1900);
++        assert_eq!(*actions.borrow(),vec!["next","prev"]);
++        // Target a descendant's native GDK window so GTK handles its viewport.
++        let before=scroll.vadjustment().value();
++        let mut event=gdk::Event::new(gdk::EventType::Scroll);
++        event.set_device(gdk::Display::default().unwrap().default_seat().and_then(|s|s.pointer()).as_ref());
++        unsafe { let p: *mut gdk::ffi::GdkEvent=event.to_glib_none_mut().0;(*p).scroll.window=scroll.window().unwrap().to_glib_full();
++            (*p).scroll.direction=gdk::ffi::GDK_SCROLL_SMOOTH;(*p).scroll.time=2500;
++            (*p).scroll.x=40.0;(*p).scroll.y=40.0;(*p).scroll.delta_y=4.0; }
++        event.put();drain();
++        assert!(scroll.vadjustment().value()>before,"Vertical content scrolling must keep working");
++        assert_eq!(actions.borrow().len(),2);
++        let handle=second.child().unwrap().downcast::<gtk::EventBox>().unwrap();
++        configure_swipe(&handle,false,|_|panic!("A non-stack must not switch"));
++        send(&second,2.0,0.0,3100);
++        assert_eq!(actions.borrow().len(),2);
++        let again=actions.clone();
++        configure_swipe(&handle,true,move |direction|again.borrow_mut().push(direction.into()));
++        send(&second,-2.0,0.0,3800);
++        assert_eq!(*actions.borrow(),vec!["next","prev","prev"]);
++        unsafe { second.destroy(); } drain();
++    }
++
++}
 diff --git a/crates/eww/src/ipc_server.rs b/crates/eww/src/ipc_server.rs
 index 7630f00..af42d00 100644
 --- a/crates/eww/src/ipc_server.rs
@@ -463,7 +646,7 @@ index 3af08fa..97e30c5 100644
      fn test_nested_inheritance() {
          let globals = hashmap! {
 diff --git a/crates/eww/src/widgets/widget_definitions.rs b/crates/eww/src/widgets/widget_definitions.rs
-index 8284d0f..b0707a2 100644
+index 8284d0f..a6d6ecf 100644
 --- a/crates/eww/src/widgets/widget_definitions.rs
 +++ b/crates/eww/src/widgets/widget_definitions.rs
 @@ -84,6 +84,7 @@ pub const BUILTIN_WIDGET_NAMES: &[&str] = &[
@@ -521,14 +704,24 @@ index 8284d0f..b0707a2 100644
  /// Deprecated attributes from top of widget hierarchy
  static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
      Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
-@@ -829,15 +863,36 @@ fn build_gtk_event_box(bargs: &mut BuilderArgs) -> Result<gtk::EventBox> {
+@@ -829,15 +863,46 @@ fn build_gtk_event_box(bargs: &mut BuilderArgs) -> Result<gtk::EventBox> {
      });
  
      def_widget!(bargs, _g, gtk_widget, {
 +        // Local extension: a native drag handle for a desktop widget window.
-+        prop(drag_window: as_bool = false, drag_grid: as_i32 = 16) {
++        prop(drag_window: as_bool = false, drag_grid: as_i32 = 16, onwindowdrop: as_string = "") {
 +            if drag_window {
-+                crate::draggable::install(&gtk_widget, drag_grid);
++                crate::draggable::install(&gtk_widget, drag_grid, move |geometry| {
++                    if !onwindowdrop.is_empty() { run_command(Duration::from_secs(5), &onwindowdrop, &geometry); }
++                });
++            }
++        },
++        // Smooth horizontal scrolling switches a stack; vertical scrolling stays native.
++        prop(window_swipe: as_bool = false, onwindowswipe: as_string = "") {
++            if !onwindowswipe.is_empty() {
++                crate::draggable::configure_swipe(&gtk_widget, window_swipe, move |direction| {
++                    run_command(Duration::from_secs(3), &onwindowswipe, &[direction.to_owned()]);
++                });
 +            }
 +        },
 +        // Local extension: resize this desktop widget from a corner grip.

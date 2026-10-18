@@ -52,7 +52,14 @@ def geometry(win):
 
 def windows():
     result={}
-    for win in prop(ROOT,'_NET_CLIENT_LIST'):
+    clients=prop(ROOT,'_NET_CLIENT_LIST_STACKING') or prop(ROOT,'_NET_CLIENT_LIST')
+    if not clients:
+        setup('XQueryTree',I,[P,U,C.POINTER(U),C.POINTER(U),C.POINTER(C.POINTER(U)),C.POINTER(C.c_uint)])
+        root,parent,children,count=U(),U(),C.POINTER(U)(),C.c_uint()
+        if X.XQueryTree(D,ROOT,C.byref(root),C.byref(parent),C.byref(children),C.byref(count)):
+            clients=list(children[:count.value])
+            if children:X.XFree(children)
+    for win in clients:
         name=prop(win,'_NET_WM_NAME') or prop(win,'WM_NAME')
         if isinstance(name,str) and name.startswith('Eww - uw-'):
             rect=geometry(win)

@@ -27,3 +27,7 @@ test-webview:
 .PHONY: test-stacks
 test-stacks:
 	xvfb-run -a -s '-screen 0 1600x1000x24' /usr/bin/python3 tests/stack-ui-smoke.py
+
+.PHONY: test-gestures
+test-gestures:
+	cd .build/eww-source && xvfb-run -a cargo +stable test --locked --release --no-default-features --features x11 -p eww stack_motion_tests -- --test-threads=1

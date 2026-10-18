@@ -108,3 +108,5 @@ tooltip { background: #f8fafc; border-radius: 8px; padding: 8px; }
 .stack-indicator { border-radius: 8px; padding: 1px 7px; background: rgba(40,47,58,.85); }
 .stack-indicator label { color: #e0e5ec; font-size: 9px; }
 .stack-indicator:hover { background: #465368; }
+
+.stack-drop-target .card { border-color: #7fa9dc; box-shadow: inset 0 0 0 2px rgba(110,161,225,.8), 0 4px 10px rgba(20,31,48,.2); }
