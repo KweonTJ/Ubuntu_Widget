@@ -15,5 +15,7 @@ module.exports = async context => {
   const quote = name => name.replace(/\$/g, () => '$$').replace(/\//g, '\\');
   const lines = files.map(name => `Delete "$INSTDIR\\${quote(name)}"`);
   for (const name of dirs.sort((a,b)=>b.length-a.length)) lines.push(`RMDir "$INSTDIR\\${quote(name)}"`);
-  fs.writeFileSync(path.join(context.outDir, 'uninstall-files.nsh'), lines.join('\n')+'\n');
+  const manifest = path.resolve(context.outDir, 'uninstall-files.nsh');
+  fs.writeFileSync(manifest, lines.join('\n')+'\n');
+  console.log('Prepared NSIS uninstall manifest:', manifest);
 };

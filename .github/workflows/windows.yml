@@ -33,6 +33,8 @@ jobs:
       - run: npm run smoke
       - run: npm run build
       - run: node scripts/check-package.cjs
+      - name: Install and uninstall in a disposable user profile
+        run: ./scripts/test-installed.ps1
       - name: Checksums
         shell: pwsh
         run: |

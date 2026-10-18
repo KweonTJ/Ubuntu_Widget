@@ -82,7 +82,7 @@ FunctionEnd
 
 Section "Uninstall"
   Delete "$INSTDIR\resources\elevate.exe"
-  !include "${PROJECT_DIR}/dist/uninstall-files.nsh"
+  !include "${PROJECT_DIR}\dist\uninstall-files.nsh"
   Delete "$INSTDIR\Uninstall Widget Library.exe"
   RMDir "$INSTDIR"
   Delete "$DESKTOP\Widget Library.lnk"
