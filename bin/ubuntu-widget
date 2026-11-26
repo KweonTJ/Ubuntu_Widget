@@ -6,7 +6,7 @@ export EWW_INTEGRATION_CACHE="${EWW_INTEGRATION_CACHE:-${XDG_CACHE_HOME:-$HOME/.
 export GDK_BACKEND=x11
 case "${1:-edit}" in
   --help|help)
-    echo 'Usage: ubuntu-widget [edit|start|hide|toggle|restore|restart|theme auto|theme light|theme dark|reset]'
+    echo 'Usage: ubuntu-widget [edit|autostart|start|hide|toggle|restore|restart|theme auto|theme light|theme dark|reset]'
     exit 0 ;;
 esac
 if [ "${XDG_SESSION_TYPE:-x11}" != x11 ] || [ -z "${DISPLAY:-}" ]; then
@@ -19,6 +19,7 @@ if [ ! -x "$EWW_WIDGET_BINARY" ]; then
 fi
 case "${1:-edit}" in
   edit|manager) exec /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/manager-launch.py" ;;
+  autostart) exec /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/autostart.py" ;;
   start)
     /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/start-service.py"
     exec /usr/bin/python3 "$EWW_WIDGET_CONFIG/scripts/windows.py" open ;;

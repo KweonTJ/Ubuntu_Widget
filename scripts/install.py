@@ -68,7 +68,7 @@ Exec={command} restore
         (startup/'ubuntu-widget.desktop').write_text('''[Desktop Entry]
 Type=Application
 Name=Ubuntu Widget
-Exec={command} start
+Exec={command} autostart
 Icon=ubuntu-widget
 Terminal=false
 X-GNOME-Autostart-enabled=true

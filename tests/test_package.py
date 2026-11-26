@@ -43,6 +43,8 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(json.loads((config/'widget-settings.json').read_text()),own)
         self.assertEqual(json.loads((config/'connections.json').read_text()),state)
         self.assertTrue((home/'settings/autostart/ubuntu-widget.desktop').exists())
+        self.assertIn(' autostart\n',(home/'settings/autostart/ubuntu-widget.desktop').read_text())
+        self.assertTrue((config/'scripts/autostart.py').is_file())
     def test_unknown_config_and_stock_engine_are_rejected(self):
         home=self.root/'user';config=home/'settings/ubuntu-widget';config.mkdir(parents=True);(config/'mine.txt').write_text('existing content')
         with self.assertRaises(ValueError):self.install(home)

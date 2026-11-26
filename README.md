@@ -244,7 +244,7 @@ cd Ubuntu_Widget
 - The Git repository contains source and the patch. Release Debian packages include an engine built from that source, without a developer's desktop backup. The initial desktop engine was verified with stable Rust 1.99.0 on Ubuntu 22.04.
 - If a build runs out of memory, retry with `CARGO_BUILD_JOBS=2 ./scripts/build-eww.sh`.
 - To use an already built **patched** binary, run `./install.sh --eww /path/to/eww`.
-- Add `--autostart` to install a login entry for widgets you have added. Autostart is otherwise off.
+- Add `--autostart` to install a login entry for widgets you have added. Autostart is otherwise off. The entry waits for the X11 display and window manager, then retries startup failures for up to 90 seconds. Re-run the installer with `--autostart` to update an existing source installation's login entry.
 - Installation is per-user and needs no `sudo`. It does not overwrite an unrelated Eww setup.
 
 Open **Widget Library / 위젯 보관함** from the application menu. A fresh installation starts with an empty desktop; select the widgets you want and click **바탕화면에 추가** (Add to desktop). Add-ons that require an account display a setup prompt until you connect your own account.
@@ -287,7 +287,7 @@ Installation preserves existing notes, accounts, websites, layout and other user
 
 Uninstall keeps personal configuration and keyring entries. Disconnect accounts and turn glass off in the app first if you want credentials removed and compositor preferences restored. Remove your local config/cache manually only when you intend to erase your own content.
 
-If the app does not launch, check the cache directory's `gallery.log` and `daemon.log`. Verify Xorg, the patched engine, a running user systemd/D-Bus session, and an unlocked GNOME Keyring. If controls stop responding, restart the engine; its layout listener also repairs desktop-icon stacking automatically.
+If the app does not launch, check the cache directory's `gallery.log` and `daemon.log`; login startup also records `autostart.log`. The default cache directory is `~/.cache/ubuntu-widget` (or `$XDG_CACHE_HOME/ubuntu-widget`). Verify Xorg, the patched engine, a running user systemd/D-Bus session, and an unlocked GNOME Keyring. If controls stop responding, restart the engine; its layout listener also repairs desktop-icon stacking automatically.
 
 No iPhone connection controls or Continuity setup are included. Native Apple Continuity is not implemented.
 
